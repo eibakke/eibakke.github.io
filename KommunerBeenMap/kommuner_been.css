@@ -79,6 +79,40 @@ body {
   background: white;
   border-radius: 3px;
   border-left: 4px solid #4CAF50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+#visited-list li:hover {
+  background-color: #f8f8f8;
+}
+
+.kommune-name {
+  flex: 1;
+  padding-right: 10px;
+}
+
+.remove-btn {
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.remove-btn:hover {
+  background-color: #cc0000;
 }
 
 path {

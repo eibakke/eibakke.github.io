@@ -44,8 +44,19 @@ $(document).ready(function() {
 		listContainer.empty();
 		const sortedKommuner = Array.from(selected_kommuner).sort();
 		sortedKommuner.forEach(kommune => {
-			listContainer.append(`<li>${kommune}</li>`);
+			const listItem = $(`<li>
+				<span class="kommune-name">${kommune}</span>
+				<button class="remove-btn" data-kommune="${kommune}" title="Fjern">×</button>
+			</li>`);
+			listContainer.append(listItem);
 		});
+	}
+	
+	// Remove kommune function
+	function removeKommune(kommuneName) {
+		selected_kommuner.delete(kommuneName);
+		$(`#${kommuneName}`).css('fill', default_color);
+		saveKommuner();
 	}
 
 	// Initialize
@@ -87,6 +98,13 @@ $(document).ready(function() {
 			$("path").css('fill', default_color);
 			saveKommuner();
 		}
+	});
+	
+	// Remove button handler (using event delegation)
+	$(document).on('click', '.remove-btn', function(e) {
+		e.stopPropagation();
+		const kommuneName = $(this).data('kommune');
+		removeKommune(kommuneName);
 	});
 	
 	// Zoom functionality
