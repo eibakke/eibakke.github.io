@@ -16,10 +16,30 @@ body {
   flex-shrink: 0;
 }
 
+.header-section {
+  margin-bottom: 20px;
+}
+
+#back-btn {
+  display: inline-block;
+  color: #002868;
+  text-decoration: none;
+  font-size: 16px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+#back-btn:hover {
+  background-color: rgba(0, 40, 104, 0.1);
+  text-decoration: underline;
+}
+
 #sidebar h1 {
   font-size: 1.5em;
   color: #002868;
-  margin-top: 0;
+  margin: 0;
 }
 
 #sidebar h3 {
