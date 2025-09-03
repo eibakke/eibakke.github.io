@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Norske kommuner jeg har besøkt</title>
 <link rel="stylesheet" href="kommuner_been.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
 <script src="kommuner_been.js"></script>
 </head>
 <body>
+	<div id="sidebar">
+		<h1>Kommuner jeg har besøkt</h1>
+		<div id="counter">0 av 0 kommuner besøkt</div>
+		<div class="controls">
+			<button id="clear-btn">Fjern alle</button>
+		</div>
+		<div id="list-container">
+			<h3>Besøkte kommuner:</h3>
+			<ul id="visited-list"></ul>
+		</div>
+	</div>
 	<div id="info-box" data-info="<div>info-box</div>"></div>
 	<div id="svg-container">
 		<svg
