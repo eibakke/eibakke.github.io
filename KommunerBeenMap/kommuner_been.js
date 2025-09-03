@@ -6,6 +6,12 @@ $(document).ready(function() {
 	const default_color = "#5c8bd6";
 	const hover_color = "#002868";
 	const selected_color = "#4CAF50";
+	
+	// Zoom and pan variables
+	let currentZoom = 1;
+	let isPanning = false;
+	let startPoint = {x: 0, y: 0};
+	let viewBox = {x: 0, y: 0, width: 2104.7244, height: 2979.9211};
 
 	// Load saved kommuner from localStorage
 	function loadSavedKommuner() {
@@ -82,6 +88,105 @@ $(document).ready(function() {
 			saveKommuner();
 		}
 	});
+	
+	// Zoom functionality
+	function updateViewBox() {
+		const svg = $('#no-map')[0];
+		svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+	}
+	
+	function zoom(factor, centerX, centerY) {
+		// Calculate new dimensions
+		const newWidth = viewBox.width / factor;
+		const newHeight = viewBox.height / factor;
+		
+		// Calculate new position to keep zoom centered
+		const newX = viewBox.x + (viewBox.width - newWidth) * (centerX || 0.5);
+		const newY = viewBox.y + (viewBox.height - newHeight) * (centerY || 0.5);
+		
+		// Update viewBox
+		viewBox = {
+			x: Math.max(0, Math.min(newX, 2104.7244 - newWidth)),
+			y: Math.max(0, Math.min(newY, 2979.9211 - newHeight)),
+			width: newWidth,
+			height: newHeight
+		};
+		
+		currentZoom *= factor;
+		updateViewBox();
+		updateZoomDisplay();
+	}
+	
+	function updateZoomDisplay() {
+		$('#zoom-level').text(`${Math.round(currentZoom * 100)}%`);
+	}
+	
+	// Mouse wheel zoom
+	$('#svg-container').on('wheel', function(e) {
+		e.preventDefault();
+		const delta = e.originalEvent.deltaY;
+		const factor = delta > 0 ? 0.9 : 1.1;
+		
+		// Get mouse position relative to SVG
+		const svg = $('#no-map')[0];
+		const pt = svg.createSVGPoint();
+		pt.x = e.clientX;
+		pt.y = e.clientY;
+		const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+		
+		// Calculate relative position
+		const relX = (svgP.x - viewBox.x) / viewBox.width;
+		const relY = (svgP.y - viewBox.y) / viewBox.height;
+		
+		zoom(factor, relX, relY);
+	});
+	
+	// Pan functionality
+	$('#no-map').on('mousedown', function(e) {
+		if (e.button === 1 || (e.button === 0 && e.shiftKey)) { // Middle button or shift+left click
+			isPanning = true;
+			startPoint = {x: e.clientX, y: e.clientY};
+			e.preventDefault();
+			$('#svg-container').css('cursor', 'grabbing');
+		}
+	});
+	
+	$(document).on('mousemove', function(e) {
+		if (!isPanning) return;
+		
+		const dx = (e.clientX - startPoint.x) * (viewBox.width / $('#svg-container').width());
+		const dy = (e.clientY - startPoint.y) * (viewBox.height / $('#svg-container').height());
+		
+		viewBox.x = Math.max(0, Math.min(viewBox.x - dx, 2104.7244 - viewBox.width));
+		viewBox.y = Math.max(0, Math.min(viewBox.y - dy, 2979.9211 - viewBox.height));
+		
+		updateViewBox();
+		startPoint = {x: e.clientX, y: e.clientY};
+	});
+	
+	$(document).on('mouseup', function() {
+		isPanning = false;
+		$('#svg-container').css('cursor', 'default');
+	});
+	
+	// Zoom controls
+	$('#zoom-in').click(function() {
+		zoom(1.2);
+	});
+	
+	$('#zoom-out').click(function() {
+		zoom(0.8);
+	});
+	
+	$('#reset-view').click(function() {
+		viewBox = {x: 0, y: 0, width: 2104.7244, height: 2979.9211};
+		currentZoom = 1;
+		updateViewBox();
+		updateZoomDisplay();
+	});
+	
+	// Initialize zoom display
+	updateZoomDisplay();
 
 	$(document).mousemove(function(e) {
 	  $('#info-box').css('top', e.pageY - $('#info-box').height()-30);
