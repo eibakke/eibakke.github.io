@@ -36,15 +36,24 @@ $(document).ready(function() {
 				kommunerArray.forEach(kommune => {
 					$(`#${kommune}`).css('fill', selected_color);
 				});
-				// Save to localStorage as well
-				localStorage.setItem(STORAGE_KEY, JSON.stringify(kommunerArray));
+				// DON'T save to localStorage automatically - let users save their own
 				updateCounter();
+				// Show a notice that this is a shared view
+				showSharedViewNotice();
 				return true;
 			} catch (error) {
 				console.warn('Failed to load kommuner from URL:', error);
 			}
 		}
 		return false;
+	}
+	
+	function showSharedViewNotice() {
+		const notice = $('<div id="shared-notice">Du ser på en delt liste. Gjør endringer for å lagre din egen versjon.</div>');
+		$('#counter').after(notice);
+		setTimeout(() => {
+			notice.fadeOut(500, () => notice.remove());
+		}, 5000);
 	}
 
 	// Load saved kommuner from localStorage
