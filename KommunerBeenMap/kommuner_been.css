@@ -63,6 +63,28 @@ body {
 
 .controls {
   margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#share-btn {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1em;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#share-btn:hover {
+  background-color: #1976D2;
+}
+
+#share-btn.copied {
+  background-color: #4CAF50;
 }
 
 #clear-btn {
@@ -73,7 +95,6 @@ body {
   font-size: 1em;
   border-radius: 5px;
   cursor: pointer;
-  width: 100%;
   transition: background-color 0.3s;
 }
 

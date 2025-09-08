@@ -13,8 +13,48 @@ $(document).ready(function() {
 	let startPoint = {x: 0, y: 0};
 	let viewBox = {x: 0, y: 0, width: 2104.7244, height: 2979.9211};
 
+	// URL sharing functionality
+	function getUrlParameter(name) {
+		const urlParams = new URLSearchParams(window.location.search);
+		return urlParams.get(name);
+	}
+	
+	function generateShareUrl() {
+		const baseUrl = window.location.origin + window.location.pathname;
+		const kommunerArray = Array.from(selected_kommuner).sort();
+		const encodedKommuner = encodeURIComponent(kommunerArray.join(','));
+		return `${baseUrl}?kommuner=${encodedKommuner}`;
+	}
+	
+	function loadFromUrl() {
+		const urlKommuner = getUrlParameter('kommuner');
+		if (urlKommuner) {
+			try {
+				const kommunerArray = decodeURIComponent(urlKommuner).split(',').filter(k => k.length > 0);
+				selected_kommuner = new Set(kommunerArray);
+				// Apply URL selections to map
+				kommunerArray.forEach(kommune => {
+					$(`#${kommune}`).css('fill', selected_color);
+				});
+				// Save to localStorage as well
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(kommunerArray));
+				updateCounter();
+				return true;
+			} catch (error) {
+				console.warn('Failed to load kommuner from URL:', error);
+			}
+		}
+		return false;
+	}
+
 	// Load saved kommuner from localStorage
 	function loadSavedKommuner() {
+		// First try to load from URL (takes priority)
+		if (loadFromUrl()) {
+			return;
+		}
+		
+		// Fallback to localStorage
 		const saved = localStorage.getItem(STORAGE_KEY);
 		if (saved) {
 			const kommunerArray = JSON.parse(saved);
@@ -106,6 +146,59 @@ $(document).ready(function() {
 		const kommuneName = $(this).data('kommune');
 		removeKommune(kommuneName);
 	});
+	
+	// Share button handler
+	$('#share-btn').click(function() {
+		if (selected_kommuner.size === 0) {
+			alert('Du må velge minst én kommune før du kan dele!');
+			return;
+		}
+		
+		const shareUrl = generateShareUrl();
+		
+		// Try to use modern clipboard API
+		if (navigator.clipboard && window.isSecureContext) {
+			navigator.clipboard.writeText(shareUrl).then(() => {
+				showShareSuccess();
+			}).catch(() => {
+				fallbackCopyToClipboard(shareUrl);
+			});
+		} else {
+			fallbackCopyToClipboard(shareUrl);
+		}
+	});
+	
+	// Fallback copy method for older browsers
+	function fallbackCopyToClipboard(text) {
+		const textArea = document.createElement('textarea');
+		textArea.value = text;
+		textArea.style.position = 'fixed';
+		textArea.style.left = '-999999px';
+		textArea.style.top = '-999999px';
+		document.body.appendChild(textArea);
+		textArea.focus();
+		textArea.select();
+		
+		try {
+			document.execCommand('copy');
+			showShareSuccess();
+		} catch (err) {
+			prompt('Kopier denne lenken:', text);
+		} finally {
+			textArea.remove();
+		}
+	}
+	
+	// Show success message
+	function showShareSuccess() {
+		const btn = $('#share-btn');
+		const originalText = btn.text();
+		btn.text('Lenke kopiert!').addClass('copied');
+		
+		setTimeout(() => {
+			btn.text(originalText).removeClass('copied');
+		}, 2000);
+	}
 	
 	// Zoom functionality
 	function updateViewBox() {
