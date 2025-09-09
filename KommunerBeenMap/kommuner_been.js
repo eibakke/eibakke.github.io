@@ -307,6 +307,94 @@ $(document).ready(function() {
 	
 	// Initialize zoom display
 	updateZoomDisplay();
+	
+	// Mobile menu toggle
+	$('#mobile-menu-btn').click(function() {
+		$('#sidebar').toggleClass('open');
+		$('.sidebar-overlay').toggleClass('show');
+	});
+	
+	// Close sidebar when clicking overlay or close button
+	$('.sidebar-overlay, #close-sidebar-btn').click(function() {
+		$('#sidebar').removeClass('open');
+		$('.sidebar-overlay').removeClass('show');
+	});
+	
+	// Touch support for map
+	let touchStartDistance = 0;
+	let touchStartScale = 1;
+	
+	// Handle pinch zoom on mobile
+	$('#svg-container').on('touchstart', function(e) {
+		if (e.originalEvent.touches.length === 2) {
+			e.preventDefault();
+			const touch1 = e.originalEvent.touches[0];
+			const touch2 = e.originalEvent.touches[1];
+			touchStartDistance = Math.hypot(
+				touch2.clientX - touch1.clientX,
+				touch2.clientY - touch1.clientY
+			);
+			touchStartScale = currentZoom;
+		}
+	});
+	
+	$('#svg-container').on('touchmove', function(e) {
+		if (e.originalEvent.touches.length === 2) {
+			e.preventDefault();
+			const touch1 = e.originalEvent.touches[0];
+			const touch2 = e.originalEvent.touches[1];
+			const currentDistance = Math.hypot(
+				touch2.clientX - touch1.clientX,
+				touch2.clientY - touch1.clientY
+			);
+			
+			if (touchStartDistance > 0) {
+				const scale = currentDistance / touchStartDistance;
+				const newZoom = Math.max(0.5, Math.min(5, touchStartScale * scale));
+				const factor = newZoom / currentZoom;
+				
+				// Calculate center point between touches
+				const centerX = (touch1.clientX + touch2.clientX) / 2;
+				const centerY = (touch1.clientY + touch2.clientY) / 2;
+				
+				// Get position relative to SVG
+				const svg = $('#no-map')[0];
+				const rect = svg.getBoundingClientRect();
+				const relX = (centerX - rect.left) / rect.width;
+				const relY = (centerY - rect.top) / rect.height;
+				
+				zoom(factor, relX, relY);
+			}
+		}
+	});
+	
+	// Improve touch responsiveness for paths
+	let touchTimer;
+	$('path').on('touchstart', function(e) {
+		const element = this;
+		touchTimer = setTimeout(function() {
+			// Long press shows info
+			const info = $(element).data('info');
+			$('#info-box').html(info).css({
+				display: 'block',
+				top: e.originalEvent.touches[0].pageY - 50,
+				left: e.originalEvent.touches[0].pageX - 50
+			});
+		}, 500);
+	});
+	
+	$('path').on('touchend', function(e) {
+		clearTimeout(touchTimer);
+		$('#info-box').css('display', 'none');
+		// Trigger click for selection
+		$(this).trigger('click');
+		e.preventDefault();
+	});
+	
+	$('path').on('touchmove', function() {
+		clearTimeout(touchTimer);
+		$('#info-box').css('display', 'none');
+	});
 
 	$(document).mousemove(function(e) {
 	  $('#info-box').css('top', e.pageY - $('#info-box').height()-30);

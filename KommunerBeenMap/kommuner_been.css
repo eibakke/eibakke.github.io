@@ -5,6 +5,7 @@ body {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 #sidebar {
@@ -272,4 +273,131 @@ path:hover {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* Mobile menu toggle button */
+#mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1001;
+  background-color: #002868;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Close button for mobile sidebar */
+#close-sidebar-btn {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: transparent;
+  border: none;
+  font-size: 30px;
+  color: #666;
+  cursor: pointer;
+  padding: 5px;
+  z-index: 1001;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
+  
+  #mobile-menu-btn {
+    display: block;
+  }
+  
+  #close-sidebar-btn {
+    display: block;
+  }
+  
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100%;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  
+  #sidebar.open {
+    left: 0;
+  }
+  
+  #map-area {
+    width: 100%;
+    height: 100%;
+  }
+  
+  #zoom-controls {
+    top: 60px;
+    right: 10px;
+  }
+  
+  #zoom-controls button {
+    width: 45px;
+    height: 45px;
+    font-size: 22px;
+  }
+  
+  .zoom-help {
+    display: none;
+  }
+  
+  /* Overlay when sidebar is open */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+  
+  .sidebar-overlay.show {
+    display: block;
+  }
+  
+  /* Larger touch targets for mobile */
+  .remove-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+  }
+  
+  #clear-btn, #share-btn {
+    padding: 12px 20px;
+    font-size: 1.1em;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  #sidebar {
+    width: 90%;
+  }
+  
+  #zoom-controls {
+    transform: scale(0.9);
+    top: 50px;
+    right: 5px;
+  }
 }
