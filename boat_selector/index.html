@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Familie Båt Velger</title>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        .btn {
+            @apply px-4 py-2 rounded font-medium transition-colors;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700;
+        }
+        .btn-secondary {
+            @apply bg-gray-300 text-gray-700 hover:bg-gray-400;
+        }
+        .btn-green {
+            @apply bg-green-600 text-white hover:bg-green-700;
+        }
+        .btn-orange {
+            @apply bg-orange-600 text-white hover:bg-orange-700;
+        }
+        .input-field {
+            @apply w-full p-2 border border-gray-300 rounded;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <h1 class="text-2xl font-bold text-gray-900">Familie Båt Velger</h1>
+            <p class="text-gray-600">Koordiner båtkjøp med familie og venner</p>
+            <a href="../index.html" class="text-blue-600 hover:text-blue-800 text-sm">← Tilbake til hovedsiden</a>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <!-- Tab Navigation -->
+        <div class="flex mb-6 bg-white rounded-lg p-1 shadow-sm">
+            <button id="tab-budget" class="flex-1 py-2 px-4 rounded-md text-sm font-medium tab-button active">
+                Budsjett Kalkulator
+            </button>
+            <button id="tab-financing" class="flex-1 py-2 px-4 rounded-md text-sm font-medium tab-button">
+                Intern Finansiering
+            </button>
+            <button id="tab-boats" class="flex-1 py-2 px-4 rounded-md text-sm font-medium tab-button">
+                Foreslåtte Båter
+            </button>
+        </div>
+
+        <!-- Budget Calculator Tab -->
+        <div id="budget-content" class="tab-content">
+            <div class="space-y-6">
+                <div class="bg-blue-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Båt Budsjett Kalkulator
+                    </h2>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Antall personer som deler:</label>
+                            <div class="flex items-center gap-3">
+                                <button id="family-minus" class="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                    </svg>
+                                </button>
+                                <span id="family-size" class="text-xl font-bold w-12 text-center">4</span>
+                                <button id="family-plus" class="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Årlig budsjett totalt (NOK):</label>
+                            <input type="range" id="annual-budget" min="10000" max="150000" step="5000" value="50000" class="w-full">
+                            <div id="budget-display" class="text-center font-bold text-lg">50 000 kr</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium mb-2">Type båt:</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <button data-type="motorboat" class="boat-type-btn p-3 rounded text-sm active">Motorbåt/Kabinebåt</button>
+                            <button data-type="sailboat" class="boat-type-btn p-3 rounded text-sm">Seilbåt</button>
+                            <button data-type="speedboat" class="boat-type-btn p-3 rounded text-sm">Speedbåt/Bowrider</button>
+                            <button data-type="fishing" class="boat-type-btn p-3 rounded text-sm">Fiskebåt/Aluminiumsbåt</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">Resultat:</h3>
+                    <div class="grid md:grid-cols-3 gap-4 text-center">
+                        <div class="bg-white p-4 rounded">
+                            <div id="max-price" class="text-2xl font-bold text-green-600">714 286 kr</div>
+                            <div class="text-sm text-gray-600">Maks kjøpspris</div>
+                        </div>
+                        <div class="bg-white p-4 rounded">
+                            <div id="annual-per-person" class="text-2xl font-bold text-blue-600">12 500 kr</div>
+                            <div class="text-sm text-gray-600">Årlig kostnad per person</div>
+                        </div>
+                        <div class="bg-white p-4 rounded">
+                            <div id="monthly-per-person" class="text-2xl font-bold text-purple-600">1 041 kr</div>
+                            <div class="text-sm text-gray-600">Måndelig kostnad per person</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-center">
+                        <a id="finn-search-link" href="#" target="_blank" rel="noopener noreferrer"
+                           class="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            <span id="finn-link-text">Søk på Finn.no</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financing Calculator Tab -->
+        <div id="financing-content" class="tab-content hidden">
+            <div class="space-y-6">
+                <div class="bg-purple-50 p-6 rounded-lg">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Intern Finansiering med Forskudd
+                    </h2>
+
+                    <div class="grid md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Båtpris (NOK):</label>
+                            <input type="number" id="boat-price" value="750000" class="input-field" step="10000">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Rente (%):</label>
+                            <input type="number" id="interest-rate" value="4.5" class="input-field" step="0.1" min="0" max="20">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Låneperiode (år):</label>
+                            <input type="number" id="loan-years" value="5" class="input-field" step="1" min="1" max="30">
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold">Forskudd per person:</h3>
+                        <div id="person-contributions" class="grid gap-3">
+                            <!-- Person inputs will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-4">Finansieringssammendrag:</h3>
+                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded text-center">
+                            <div id="total-upfront" class="text-2xl font-bold text-blue-600">0 kr</div>
+                            <div class="text-sm text-gray-600">Totalt forskudd</div>
+                        </div>
+                        <div class="bg-white p-4 rounded text-center">
+                            <div id="monthly-payment" class="text-2xl font-bold text-green-600">0 kr</div>
+                            <div class="text-sm text-gray-600">Måndelig betaling (internt)</div>
+                        </div>
+                        <div class="bg-white p-4 rounded text-center">
+                            <div id="total-interest" class="text-2xl font-bold text-purple-600">0 kr</div>
+                            <div class="text-sm text-gray-600">Total rente</div>
+                        </div>
+                    </div>
+
+                    <h4 class="text-md font-semibold mb-3">Månedlig fordeling per person:</h4>
+                    <div id="person-breakdown" class="space-y-3">
+                        <!-- Person breakdown will be generated here -->
+                    </div>
+
+                    <div id="explanation" class="mt-6 p-4 bg-yellow-50 rounded border-l-4 border-yellow-400 hidden">
+                        <h4 class="font-semibold text-yellow-800 mb-2">💡 Forklaring:</h4>
+                        <ul class="text-sm text-yellow-700 space-y-1">
+                            <li id="ownership-explanation">• Alle eier like store andeler av båten (25% hver)</li>
+                            <li>• De som betalte mindre enn sin andel betaler månedlig til de som betalte mer</li>
+                            <li>• De som betalte mer mottar månedlige betalinger med rente</li>
+                            <li id="payoff-explanation">• Etter 5 år er alle utlignet</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boats List Tab -->
+        <div id="boats-content" class="tab-content hidden">
+            <div class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                        <span id="boats-count">Foreslåtte Båter (0)</span>
+                    </h2>
+                    <button id="add-boat-btn" class="btn btn-green flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Legg til båt
+                    </button>
+                </div>
+
+                <div id="boats-list" class="space-y-4">
+                    <div id="no-boats" class="text-center py-12 text-gray-500">
+                        <p>Ingen båter er lagt til ennå.</p>
+                        <p>Bruk budsjettkalkulatoren for å finne båter på Finn.no, eller legg til en båt manuelt.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Boat Modal -->
+    <div id="add-boat-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Legg til båt</h3>
+            <form id="add-boat-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Navn/Modell:</label>
+                        <input type="text" id="boat-name" required class="input-field">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Pris (NOK):</label>
+                            <input type="number" id="boat-form-price" required class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Årsmodell:</label>
+                            <input type="number" id="boat-year" class="input-field">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Lengde:</label>
+                            <input type="text" id="boat-length" class="input-field" placeholder="f.eks. 7,5m">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Motor:</label>
+                            <input type="text" id="boat-engine" class="input-field" placeholder="f.eks. 200 HK">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Finn.no lenke:</label>
+                        <input type="url" id="boat-url" class="input-field">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Beskrivelse:</label>
+                        <textarea id="boat-description" class="input-field h-20" placeholder="Hvorfor tror du denne båten passer for familien?"></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button type="submit" class="flex-1 btn btn-primary">Legg til båt</button>
+                        <button type="button" id="cancel-add-boat" class="btn btn-secondary">Avbryt</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Application state
+            let state = {
+                familySize: 4,
+                annualBudget: 50000,
+                boatType: 'motorboat',
+                boatPrice: 750000,
+                interestRate: 4.5,
+                loanYears: 5,
+                savedBoats: [],
+                personContributions: []
+            };
+
+            // Cost percentages by boat type
+            const costPercentages = {
+                motorboat: { avg: 0.07 },
+                sailboat: { avg: 0.06 },
+                speedboat: { avg: 0.08 },
+                fishing: { avg: 0.05 }
+            };
+
+            // Initialize person contributions
+            function initPersonContributions() {
+                state.personContributions = [];
+                for (let i = 1; i <= state.familySize; i++) {
+                    state.personContributions.push({
+                        id: i,
+                        name: `Person ${i}`,
+                        amount: 0
+                    });
+                }
+                renderPersonInputs();
+            }
+
+            // Tab functionality
+            $('.tab-button').click(function() {
+                const tabId = $(this).attr('id');
+                const contentId = tabId.replace('tab-', '') + '-content';
+
+                $('.tab-button').removeClass('active bg-blue-600 text-white').addClass('text-gray-700 hover:bg-gray-100');
+                $(this).removeClass('text-gray-700 hover:bg-gray-100').addClass('active bg-blue-600 text-white');
+
+                $('.tab-content').addClass('hidden');
+                $('#' + contentId).removeClass('hidden');
+
+                if (tabId === 'tab-financing') {
+                    calculateFinancing();
+                }
+            });
+
+            // Budget calculator functionality
+            $('#family-minus').click(function() {
+                if (state.familySize > 1) {
+                    state.familySize--;
+                    updateBudgetDisplay();
+                    initPersonContributions();
+                }
+            });
+
+            $('#family-plus').click(function() {
+                state.familySize++;
+                updateBudgetDisplay();
+                initPersonContributions();
+            });
+
+            $('#annual-budget').on('input', function() {
+                state.annualBudget = parseInt($(this).val());
+                updateBudgetDisplay();
+            });
+
+            $('.boat-type-btn').click(function() {
+                $('.boat-type-btn').removeClass('active bg-blue-600 text-white').addClass('bg-white border border-gray-300 hover:bg-gray-50');
+                $(this).removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('active bg-blue-600 text-white');
+                state.boatType = $(this).data('type');
+                updateBudgetDisplay();
+            });
+
+            function updateBudgetDisplay() {
+                $('#family-size').text(state.familySize);
+                $('#budget-display').text(state.annualBudget.toLocaleString('no-NO') + ' kr');
+
+                const maxPrice = Math.floor(state.annualBudget / costPercentages[state.boatType].avg);
+                const annualPerPerson = state.annualBudget / state.familySize;
+                const monthlyPerPerson = Math.floor(annualPerPerson / 12);
+
+                $('#max-price').text(maxPrice.toLocaleString('no-NO') + ' kr');
+                $('#annual-per-person').text(annualPerPerson.toLocaleString('no-NO') + ' kr');
+                $('#monthly-per-person').text(monthlyPerPerson.toLocaleString('no-NO') + ' kr');
+
+                const finnUrl = `https://www.finn.no/mobility/search/boat?no_of_seats_from=8&price_from=0&price_to=${maxPrice}&sales_form=120&sales_form=121`;
+                $('#finn-search-link').attr('href', finnUrl);
+                $('#finn-link-text').text(`Søk på Finn.no (opp til ${maxPrice.toLocaleString('no-NO')} kr)`);
+            }
+
+            // Financing calculator functionality
+            function renderPersonInputs() {
+                const container = $('#person-contributions');
+                container.empty();
+
+                state.personContributions.forEach(function(person) {
+                    const html = `
+                        <div class="flex gap-3 items-center bg-white p-3 rounded">
+                            <div class="flex-1">
+                                <input type="text" class="person-name input-field text-sm"
+                                       data-id="${person.id}" value="${person.name}" placeholder="Navn">
+                            </div>
+                            <div class="flex-1">
+                                <input type="number" class="person-amount input-field"
+                                       data-id="${person.id}" value="${person.amount}"
+                                       placeholder="Forskudd (NOK)" step="1000">
+                            </div>
+                        </div>
+                    `;
+                    container.append(html);
+                });
+
+                // Bind events for person inputs
+                $('.person-name').on('input', function() {
+                    const id = parseInt($(this).data('id'));
+                    const person = state.personContributions.find(p => p.id === id);
+                    if (person) {
+                        person.name = $(this).val();
+                        calculateFinancing();
+                    }
+                });
+
+                $('.person-amount').on('input', function() {
+                    const id = parseInt($(this).data('id'));
+                    const person = state.personContributions.find(p => p.id === id);
+                    if (person) {
+                        person.amount = parseFloat($(this).val()) || 0;
+                        calculateFinancing();
+                    }
+                });
+            }
+
+            $('#boat-price, #interest-rate, #loan-years').on('input', function() {
+                const field = $(this).attr('id').replace('-', '');
+                if (field === 'boatprice') {
+                    state.boatPrice = parseFloat($(this).val()) || 0;
+                } else if (field === 'interestrate') {
+                    state.interestRate = parseFloat($(this).val()) || 0;
+                } else if (field === 'loanyears') {
+                    state.loanYears = parseInt($(this).val()) || 1;
+                }
+                calculateFinancing();
+            });
+
+            function calculateFinancing() {
+                const equalShare = state.boatPrice / state.familySize;
+
+                // Calculate each person's position
+                const positions = state.personContributions.map(person => {
+                    const amount = person.amount || 0;
+                    return {
+                        ...person,
+                        amount,
+                        equalShare,
+                        excess: amount - equalShare,
+                        isLender: amount > equalShare,
+                        isBorrower: amount < equalShare,
+                        isNeutral: amount === equalShare
+                    };
+                });
+
+                // Separate lenders and borrowers
+                const lenders = positions.filter(p => p.isLender);
+                const borrowers = positions.filter(p => p.isBorrower);
+
+                // Calculate totals
+                const totalLent = lenders.reduce((sum, p) => sum + p.excess, 0);
+                const totalBorrowed = borrowers.reduce((sum, p) => sum + Math.abs(p.excess), 0);
+
+                // Calculate monthly payment for the total internal loan
+                const loanAmount = Math.min(totalLent, totalBorrowed);
+                const monthlyRate = state.interestRate / 100 / 12;
+                const numPayments = state.loanYears * 12;
+
+                let monthlyPaymentTotal = 0;
+                if (loanAmount > 0 && monthlyRate > 0) {
+                    monthlyPaymentTotal = loanAmount *
+                        (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+                        (Math.pow(1 + monthlyRate, numPayments) - 1);
+                } else if (loanAmount > 0) {
+                    monthlyPaymentTotal = loanAmount / numPayments;
+                }
+
+                // Calculate individual monthly flows
+                const breakdown = positions.map(person => {
+                    let monthlyPayment = 0;
+                    let monthlyReceived = 0;
+
+                    if (person.isBorrower && totalBorrowed > 0) {
+                        const borrowerShare = Math.abs(person.excess) / totalBorrowed;
+                        monthlyPayment = borrowerShare * monthlyPaymentTotal;
+                    } else if (person.isLender && totalLent > 0) {
+                        const lenderShare = person.excess / totalLent;
+                        monthlyReceived = lenderShare * monthlyPaymentTotal;
+                    }
+
+                    return {
+                        ...person,
+                        monthlyPayment,
+                        monthlyReceived,
+                        netMonthly: monthlyReceived - monthlyPayment
+                    };
+                });
+
+                const totalInterest = (monthlyPaymentTotal * numPayments) - loanAmount;
+                const totalUpfront = state.personContributions.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+                // Update display
+                $('#total-upfront').text(totalUpfront.toLocaleString('no-NO') + ' kr');
+                $('#monthly-payment').text(Math.round(monthlyPaymentTotal).toLocaleString('no-NO') + ' kr');
+                $('#total-interest').text(Math.round(totalInterest).toLocaleString('no-NO') + ' kr');
+
+                // Update person breakdown
+                const breakdownContainer = $('#person-breakdown');
+                breakdownContainer.empty();
+
+                breakdown.forEach(person => {
+                    const html = `
+                        <div class="bg-white p-4 rounded border">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium">${person.name}</span>
+                                <span class="text-sm text-gray-500">${(100/state.familySize).toFixed(1)}% eierandel</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Forskudd:</span>
+                                    <div class="font-semibold">${person.amount.toLocaleString('no-NO')} kr</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Lik andel:</span>
+                                    <div class="font-semibold">${Math.round(person.equalShare).toLocaleString('no-NO')} kr</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Overskudd/Underskudd:</span>
+                                    <div class="font-semibold ${person.excess > 0 ? 'text-green-600' : person.excess < 0 ? 'text-red-600' : 'text-gray-600'}">
+                                        ${person.excess > 0 ? '+' : ''}${Math.round(person.excess).toLocaleString('no-NO')} kr
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Betaler månedlig:</span>
+                                    <div class="font-semibold text-red-600">${Math.round(person.monthlyPayment).toLocaleString('no-NO')} kr</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Mottar månedlig:</span>
+                                    <div class="font-semibold text-green-600">${Math.round(person.monthlyReceived).toLocaleString('no-NO')} kr</div>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-600 font-medium">Netto månedlig:</span>
+                                    <div class="font-bold text-lg ${person.netMonthly > 0 ? 'text-green-600' : person.netMonthly < 0 ? 'text-red-600' : 'text-gray-600'}">
+                                        ${person.netMonthly > 0 ? '+' : ''}${Math.round(person.netMonthly).toLocaleString('no-NO')} kr
+                                        ${person.netMonthly > 0 ? ' (mottar)' : person.netMonthly < 0 ? ' (betaler)' : ' (utlignet)'}
+                                    </div>
+                                </div>
+                            </div>
+                            ${(person.isLender || person.isBorrower) ? `
+                                <div class="mt-2 text-sm text-blue-600">
+                                    ⏱️ Utlignet etter ${state.loanYears * 12} måneder (${state.loanYears} år)
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    breakdownContainer.append(html);
+                });
+
+                // Show/hide explanation
+                if (loanAmount > 0) {
+                    $('#explanation').removeClass('hidden');
+                    $('#ownership-explanation').text(`• Alle eier like store andeler av båten (${(100/state.familySize).toFixed(1)}% hver)`);
+                    $('#payoff-explanation').text(`• Etter ${state.loanYears} år er alle utlignet`);
+                } else {
+                    $('#explanation').addClass('hidden');
+                }
+            }
+
+            // Boats functionality
+            $('#add-boat-btn').click(function() {
+                $('#add-boat-modal').removeClass('hidden');
+            });
+
+            $('#cancel-add-boat').click(function() {
+                $('#add-boat-modal').addClass('hidden');
+                $('#add-boat-form')[0].reset();
+            });
+
+            $('#add-boat-form').submit(function(e) {
+                e.preventDefault();
+
+                const boat = {
+                    id: Date.now(),
+                    name: $('#boat-name').val(),
+                    price: parseInt($('#boat-form-price').val()),
+                    year: $('#boat-year').val(),
+                    length: $('#boat-length').val(),
+                    engine: $('#boat-engine').val(),
+                    url: $('#boat-url').val(),
+                    description: $('#boat-description').val(),
+                    votes: { up: 0, down: 0 },
+                    dateAdded: new Date().toLocaleDateString('no-NO')
+                };
+
+                state.savedBoats.push(boat);
+                renderBoats();
+
+                $('#add-boat-modal').addClass('hidden');
+                $('#add-boat-form')[0].reset();
+            });
+
+            function renderBoats() {
+                const container = $('#boats-list');
+                const noBoats = $('#no-boats');
+
+                $('#boats-count').text(`Foreslåtte Båter (${state.savedBoats.length})`);
+
+                if (state.savedBoats.length === 0) {
+                    noBoats.removeClass('hidden');
+                    container.children().not('#no-boats').remove();
+                    return;
+                }
+
+                noBoats.addClass('hidden');
+                container.empty().append(noBoats);
+
+                // Sort boats by vote score
+                const sortedBoats = state.savedBoats.sort((a, b) =>
+                    (b.votes.up - b.votes.down) - (a.votes.up - a.votes.down)
+                );
+
+                sortedBoats.forEach(boat => {
+                    const html = `
+                        <div class="bg-white border border-gray-200 rounded-lg p-6 boat-item" data-id="${boat.id}">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold">${boat.name}</h3>
+                                    <p class="text-2xl font-bold text-green-600">${boat.price.toLocaleString('no-NO')} kr</p>
+                                    <p class="text-sm text-gray-600">
+                                        Kostnad per person: ${Math.floor(boat.price / state.familySize).toLocaleString('no-NO')} kr
+                                    </p>
+                                </div>
+                                <button class="remove-boat text-gray-400 hover:text-red-500" data-id="${boat.id}">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                                ${boat.year ? `<div class="text-sm"><span class="font-medium">Årsmodell:</span> ${boat.year}</div>` : ''}
+                                ${boat.length ? `<div class="text-sm"><span class="font-medium">Lengde:</span> ${boat.length}</div>` : ''}
+                                ${boat.engine ? `<div class="text-sm"><span class="font-medium">Motor:</span> ${boat.engine}</div>` : ''}
+                                <div class="text-sm"><span class="font-medium">Lagt til:</span> ${boat.dateAdded}</div>
+                            </div>
+
+                            ${boat.description ? `<p class="text-sm text-gray-700 mb-4">${boat.description}</p>` : ''}
+
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-4">
+                                    <button class="vote-btn flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                            data-id="${boat.id}" data-vote="up">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                        </svg>
+                                        ${boat.votes.up}
+                                    </button>
+                                    <button class="vote-btn flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                            data-id="${boat.id}" data-vote="down">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        ${boat.votes.down}
+                                    </button>
+                                    <span class="text-sm text-gray-500">
+                                        Score: ${boat.votes.up - boat.votes.down}
+                                    </span>
+                                </div>
+                                ${boat.url ? `
+                                    <a href="${boat.url}" target="_blank" rel="noopener noreferrer"
+                                       class="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                        </svg>
+                                        Se på Finn
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                    container.append(html);
+                });
+            }
+
+            // Boat voting and removal
+            $(document).on('click', '.vote-btn', function() {
+                const boatId = parseInt($(this).data('id'));
+                const vote = $(this).data('vote');
+                const boat = state.savedBoats.find(b => b.id === boatId);
+
+                if (boat) {
+                    boat.votes[vote]++;
+                    renderBoats();
+                }
+            });
+
+            $(document).on('click', '.remove-boat', function() {
+                const boatId = parseInt($(this).data('id'));
+                state.savedBoats = state.savedBoats.filter(b => b.id !== boatId);
+                renderBoats();
+            });
+
+            // Initialize
+            $('.tab-button.active').removeClass('text-gray-700 hover:bg-gray-100').addClass('bg-blue-600 text-white');
+            $('.boat-type-btn.active').removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('bg-blue-600 text-white');
+
+            updateBudgetDisplay();
+            initPersonContributions();
+            renderBoats();
+        });
+    </script>
+</body>
+</html>
