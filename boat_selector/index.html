@@ -93,11 +93,10 @@
 
                     <div class="mt-6">
                         <label class="block text-sm font-medium mb-2">Type båt:</label>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            <button data-type="motorboat" class="boat-type-btn p-3 rounded text-sm active">Motorbåt/Kabinebåt</button>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button data-type="motorboat" class="boat-type-btn p-3 rounded text-sm active">Sjekte/Sjark</button>
                             <button data-type="sailboat" class="boat-type-btn p-3 rounded text-sm">Seilbåt</button>
                             <button data-type="speedboat" class="boat-type-btn p-3 rounded text-sm">Speedbåt/Bowrider</button>
-                            <button data-type="fishing" class="boat-type-btn p-3 rounded text-sm">Fiskebåt/Aluminiumsbåt</button>
                         </div>
                     </div>
                 </div>
@@ -313,10 +312,9 @@
 
             // Cost percentages by boat type
             const costPercentages = {
-                motorboat: { avg: 0.07 },
-                sailboat: { avg: 0.06 },
-                speedboat: { avg: 0.08 },
-                fishing: { avg: 0.05 }
+                motorboat: { avg: 0.07 },  // Sjekte/Sjark
+                sailboat: { avg: 0.06 },   // Seilbåt
+                speedboat: { avg: 0.08 }   // Speedbåt/Bowrider
             };
 
             // Initialize person contributions for financing calculator
@@ -393,9 +391,26 @@
                 $('#annual-per-person').text(annualPerPerson.toLocaleString('no-NO') + ' kr');
                 $('#monthly-per-person').text(monthlyPerPerson.toLocaleString('no-NO') + ' kr');
 
-                const finnUrl = `https://www.finn.no/mobility/search/boat?no_of_seats_from=8&price_from=0&price_to=${maxPrice}&sales_form=120&sales_form=121`;
+                // Generate Finn.no URL with boat type categories
+                let finnUrl = '';
+                if (state.boatType === 'motorboat') {
+                    // Sjekte/Sjark categories
+                    finnUrl = `https://www.finn.no/mobility/search/boat?class=6921&class=6922&class=7962&no_of_seats_from=8&price_from=0&price_to=${maxPrice}&sales_form=120&sales_form=121`;
+                } else if (state.boatType === 'sailboat') {
+                    // Seilbåt category
+                    finnUrl = `https://www.finn.no/mobility/search/boat?class=2188&no_of_seats_from=8&price_from=0&price_to=${maxPrice}&sales_form=120&sales_form=121`;
+                } else if (state.boatType === 'speedboat') {
+                    // Speedbåt/Bowrider categories
+                    finnUrl = `https://www.finn.no/mobility/search/boat?class=7961&class=7960&class=3827&no_of_seats_from=8&price_from=0&price_to=${maxPrice}&sales_form=120&sales_form=121`;
+                }
+
                 $('#finn-search-link').attr('href', finnUrl);
-                $('#finn-link-text').text(`Søk på Finn.no (opp til ${maxPrice.toLocaleString('no-NO')} kr)`);
+
+                // Update link text with boat type
+                const boatTypeName = state.boatType === 'motorboat' ? 'Sjekte/Sjark' :
+                                   state.boatType === 'sailboat' ? 'Seilbåt' :
+                                   'Speedbåt/Bowrider';
+                $('#finn-link-text').text(`Søk ${boatTypeName} på Finn.no (opp til ${maxPrice.toLocaleString('no-NO')} kr)`);
             }
 
             // Financing people counter controls
