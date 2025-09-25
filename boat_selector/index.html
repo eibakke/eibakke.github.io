@@ -143,18 +143,38 @@
                         Intern Finansiering med Forskudd
                     </h2>
 
-                    <div class="grid md:grid-cols-3 gap-6 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Båtpris (NOK):</label>
-                            <input type="number" id="boat-price" value="750000" class="input-field" step="0.01" min="0">
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Båtpris (NOK):</label>
+                                <input type="number" id="boat-price" value="750000" class="input-field" step="0.01" min="0">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Antall personer:</label>
+                                <div class="flex items-center gap-2">
+                                    <button id="financing-people-minus" class="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                        </svg>
+                                    </button>
+                                    <span id="financing-people-count" class="text-lg font-bold w-8 text-center">4</span>
+                                    <button id="financing-people-plus" class="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Rente (%):</label>
-                            <input type="number" id="interest-rate" value="4.5" class="input-field" step="0.01" min="0" max="20">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Låneperiode (år):</label>
-                            <input type="number" id="loan-years" value="5" class="input-field" step="0.1" min="0.1" max="30">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Rente (%):</label>
+                                <input type="number" id="interest-rate" value="4.5" class="input-field" step="0.01" min="0" max="20">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Låneperiode (år):</label>
+                                <input type="number" id="loan-years" value="5" class="input-field" step="0.1" min="0.1" max="30">
+                            </div>
                         </div>
                     </div>
 
@@ -287,7 +307,8 @@
                 interestRate: 4.5,
                 loanYears: 5,
                 savedBoats: [],
-                personContributions: []
+                personContributions: [],
+                financingPeople: 4  // Separate count for financing calculator
             };
 
             // Cost percentages by boat type
@@ -298,17 +319,23 @@
                 fishing: { avg: 0.05 }
             };
 
-            // Initialize person contributions
-            function initPersonContributions() {
+            // Initialize person contributions for financing calculator
+            function initFinancingContributions() {
+                const existingContributions = state.personContributions.slice();
                 state.personContributions = [];
-                for (let i = 1; i <= state.familySize; i++) {
+
+                for (let i = 1; i <= state.financingPeople; i++) {
+                    // Preserve existing data if available
+                    const existing = existingContributions[i-1];
                     state.personContributions.push({
                         id: i,
-                        name: `Person ${i}`,
-                        amount: 0
+                        name: existing ? existing.name : `Person ${i}`,
+                        amount: existing ? existing.amount : 0
                     });
                 }
+
                 renderPersonInputs();
+                calculateFinancing();
             }
 
             // Tab functionality
@@ -323,6 +350,8 @@
                 $('#' + contentId).removeClass('hidden');
 
                 if (tabId === 'tab-financing') {
+                    // Update display and recalculate when switching to financing tab
+                    $('#financing-people-count').text(state.financingPeople);
                     calculateFinancing();
                 }
             });
@@ -332,14 +361,12 @@
                 if (state.familySize > 1) {
                     state.familySize--;
                     updateBudgetDisplay();
-                    initPersonContributions();
                 }
             });
 
             $('#family-plus').click(function() {
                 state.familySize++;
                 updateBudgetDisplay();
-                initPersonContributions();
             });
 
             $('#annual-budget').on('input', function() {
@@ -370,6 +397,21 @@
                 $('#finn-search-link').attr('href', finnUrl);
                 $('#finn-link-text').text(`Søk på Finn.no (opp til ${maxPrice.toLocaleString('no-NO')} kr)`);
             }
+
+            // Financing people counter controls
+            $('#financing-people-minus').click(function() {
+                if (state.financingPeople > 1) {
+                    state.financingPeople--;
+                    $('#financing-people-count').text(state.financingPeople);
+                    initFinancingContributions();
+                }
+            });
+
+            $('#financing-people-plus').click(function() {
+                state.financingPeople++;
+                $('#financing-people-count').text(state.financingPeople);
+                initFinancingContributions();
+            });
 
             // Financing calculator functionality
             function renderPersonInputs() {
@@ -564,7 +606,7 @@
                         <div class="bg-white p-4 rounded border">
                             <div class="flex justify-between items-center mb-3">
                                 <span class="font-medium text-lg">${person.name}</span>
-                                <span class="text-sm text-gray-500">${(100/state.familySize).toFixed(1)}% eierandel</span>
+                                <span class="text-sm text-gray-500">${(100/state.financingPeople).toFixed(1)}% eierandel</span>
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-4 mb-3">
@@ -624,7 +666,7 @@
                     const explanationHtml = `
                         <h4 class="font-semibold text-yellow-800 mb-2">💡 Slik fungerer den interne finansieringen:</h4>
                         <ul class="text-sm text-yellow-700 space-y-1">
-                            <li>• Alle eier like store andeler av båten (${(100/state.familySize).toFixed(1)}% hver)</li>
+                            <li>• Alle eier like store andeler av båten (${(100/state.financingPeople).toFixed(1)}% hver)</li>
                             <li>• ${lenders.length} ${lenders.length === 1 ? 'person låner' : 'personer låner'} ut totalt ${financing.totalLent.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr</li>
                             <li>• ${borrowers.length} ${borrowers.length === 1 ? 'person låner' : 'personer låner'} totalt ${financing.totalBorrowed.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr</li>
                             <li>• Månedlige betalinger på ${financing.monthlyPaymentTotal.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr i ${financing.loanYears} år (${state.interestRate}% rente)</li>
@@ -776,7 +818,7 @@
             $('.boat-type-btn.active').removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('bg-blue-600 text-white');
 
             updateBudgetDisplay();
-            initPersonContributions();
+            initFinancingContributions();  // Initialize with financing people count
             renderBoats();
         });
     </script>
