@@ -146,15 +146,15 @@
                     <div class="grid md:grid-cols-3 gap-6 mb-6">
                         <div>
                             <label class="block text-sm font-medium mb-2">Båtpris (NOK):</label>
-                            <input type="number" id="boat-price" value="750000" class="input-field" step="10000">
+                            <input type="number" id="boat-price" value="750000" class="input-field" step="0.01" min="0">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Rente (%):</label>
-                            <input type="number" id="interest-rate" value="4.5" class="input-field" step="0.1" min="0" max="20">
+                            <input type="number" id="interest-rate" value="4.5" class="input-field" step="0.01" min="0" max="20">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Låneperiode (år):</label>
-                            <input type="number" id="loan-years" value="5" class="input-field" step="1" min="1" max="30">
+                            <input type="number" id="loan-years" value="5" class="input-field" step="0.1" min="0.1" max="30">
                         </div>
                     </div>
 
@@ -242,7 +242,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Pris (NOK):</label>
-                            <input type="number" id="boat-form-price" required class="input-field">
+                            <input type="number" id="boat-form-price" required class="input-field" step="0.01" min="0">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Årsmodell:</label>
@@ -386,7 +386,7 @@
                             <div class="flex-1">
                                 <input type="number" class="person-amount input-field"
                                        data-id="${person.id}" value="${person.amount}"
-                                       placeholder="Forskudd (NOK)" step="1000">
+                                       placeholder="Forskudd (NOK)" step="0.01" min="0">
                             </div>
                         </div>
                     `;
@@ -407,7 +407,9 @@
                     const id = parseInt($(this).data('id'));
                     const person = state.personContributions.find(p => p.id === id);
                     if (person) {
-                        person.amount = parseFloat($(this).val()) || 0;
+                        // Use precise decimal handling to avoid floating point errors
+                        const value = $(this).val();
+                        person.amount = value === '' ? 0 : parseFloat(value);
                         calculateFinancing();
                     }
                 });
@@ -415,12 +417,14 @@
 
             $('#boat-price, #interest-rate, #loan-years').on('input', function() {
                 const field = $(this).attr('id').replace('-', '');
+                const value = $(this).val();
+
                 if (field === 'boatprice') {
-                    state.boatPrice = parseFloat($(this).val()) || 0;
+                    state.boatPrice = value === '' ? 0 : parseFloat(value);
                 } else if (field === 'interestrate') {
-                    state.interestRate = parseFloat($(this).val()) || 0;
+                    state.interestRate = value === '' ? 0 : parseFloat(value);
                 } else if (field === 'loanyears') {
-                    state.loanYears = parseInt($(this).val()) || 1;
+                    state.loanYears = value === '' ? 1 : parseFloat(value);
                 }
                 calculateFinancing();
             });
@@ -521,10 +525,10 @@
                     state.loanYears
                 );
 
-                // Update summary display
-                $('#total-upfront').text(financing.totalUpfront.toLocaleString('no-NO') + ' kr');
-                $('#monthly-payment').text(Math.round(financing.monthlyPaymentTotal || 0).toLocaleString('no-NO') + ' kr');
-                $('#total-interest').text(Math.round(financing.totalInterest || 0).toLocaleString('no-NO') + ' kr');
+                // Update summary display with precise formatting
+                $('#total-upfront').text(financing.totalUpfront.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
+                $('#monthly-payment').text((financing.monthlyPaymentTotal || 0).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
+                $('#total-interest').text((financing.totalInterest || 0).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
 
                 // Add validation warning if contributions don't equal boat price
                 const summaryContainer = $('#total-upfront').parent().parent();
@@ -535,8 +539,8 @@
                     const warningHtml = `
                         <div class="contribution-warning mt-4 p-3 rounded ${difference > 0 ? 'bg-yellow-50 border-l-4 border-yellow-400' : 'bg-red-50 border-l-4 border-red-400'}">
                             <div class="text-sm ${difference > 0 ? 'text-yellow-700' : 'text-red-700'}">
-                                <strong>⚠️ Varsel:</strong> Totale forskudd (${totalContributions.toLocaleString('no-NO')} kr)
-                                ${difference > 0 ? 'overstiger' : 'underskyter'} båtprisen med ${Math.abs(difference).toLocaleString('no-NO')} kr
+                                <strong>⚠️ Varsel:</strong> Totale forskudd (${totalContributions.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr)
+                                ${difference > 0 ? 'overstiger' : 'underskyter'} båtprisen med ${Math.abs(difference).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr
                             </div>
                         </div>
                     `;
@@ -548,12 +552,12 @@
                 breakdownContainer.empty();
 
                 financing.breakdown.forEach(person => {
-                    const statusText = person.position === "lender" ? `Låner ut ${Math.abs(person.excess).toLocaleString('no-NO')} kr` :
-                                     person.position === "borrower" ? `Låner ${Math.abs(person.excess).toLocaleString('no-NO')} kr` :
+                    const statusText = person.position === "lender" ? `Låner ut ${Math.abs(person.excess).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr` :
+                                     person.position === "borrower" ? `Låner ${Math.abs(person.excess).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr` :
                                      "Betaler eksakt sin andel";
 
-                    const monthlyText = person.position === "lender" ? `Mottar ${Math.round(person.monthlyReceived).toLocaleString('no-NO')} kr/mnd i ${financing.loanYears} år` :
-                                      person.position === "borrower" ? `Betaler ${Math.round(person.monthlyPayment).toLocaleString('no-NO')} kr/mnd i ${financing.loanYears} år` :
+                    const monthlyText = person.position === "lender" ? `Mottar ${person.monthlyReceived.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i ${financing.loanYears} år` :
+                                      person.position === "borrower" ? `Betaler ${person.monthlyPayment.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i ${financing.loanYears} år` :
                                       "Ingen månedlige betalinger";
 
                     const html = `
@@ -566,8 +570,8 @@
                             <div class="grid md:grid-cols-2 gap-4 mb-3">
                                 <div class="bg-gray-50 p-3 rounded">
                                     <div class="text-sm text-gray-600">Forskudd betalt:</div>
-                                    <div class="text-xl font-bold">${person.amount.toLocaleString('no-NO')} kr</div>
-                                    <div class="text-xs text-gray-500">Lik andel: ${Math.round(person.equalShare).toLocaleString('no-NO')} kr</div>
+                                    <div class="text-xl font-bold">${person.amount.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr</div>
+                                    <div class="text-xs text-gray-500">Lik andel: ${person.equalShare.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr</div>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded">
                                     <div class="text-sm text-gray-600">Status:</div>
@@ -584,7 +588,7 @@
                                         <span class="text-gray-600 font-medium">Månedlig netto:</span>
                                         <div class="text-right">
                                             <div class="font-bold text-lg ${person.netMonthly > 0 ? 'text-green-600' : 'text-red-600'}">
-                                                ${person.netMonthly > 0 ? '+' : ''}${Math.round(person.netMonthly).toLocaleString('no-NO')} kr
+                                                ${person.netMonthly > 0 ? '+' : ''}${person.netMonthly.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr
                                             </div>
                                             <div class="text-xs text-gray-500">
                                                 ${person.netMonthly > 0 ? 'mottar' : 'betaler'} i ${financing.loanYears} år
@@ -595,7 +599,7 @@
                                     ${financing.totalInterest > 0 ? `
                                         <div class="mt-2 text-sm text-blue-600">
                                             💰 ${person.position === "lender" ? 'Tjener' : 'Betaler'} totalt
-                                            ${Math.round((person.position === "lender" ? person.monthlyReceived : person.monthlyPayment) * financing.loanMonths - Math.abs(person.excess)).toLocaleString('no-NO')} kr
+                                            ${((person.position === "lender" ? person.monthlyReceived : person.monthlyPayment) * financing.loanMonths - Math.abs(person.excess)).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr
                                             i renter
                                         </div>
                                     ` : ''}
@@ -621,10 +625,10 @@
                         <h4 class="font-semibold text-yellow-800 mb-2">💡 Slik fungerer den interne finansieringen:</h4>
                         <ul class="text-sm text-yellow-700 space-y-1">
                             <li>• Alle eier like store andeler av båten (${(100/state.familySize).toFixed(1)}% hver)</li>
-                            <li>• ${lenders.length} ${lenders.length === 1 ? 'person låner' : 'personer låner'} ut totalt ${financing.totalLent.toLocaleString('no-NO')} kr</li>
-                            <li>• ${borrowers.length} ${borrowers.length === 1 ? 'person låner' : 'personer låner'} totalt ${financing.totalBorrowed.toLocaleString('no-NO')} kr</li>
-                            <li>• Månedlige betalinger på ${Math.round(financing.monthlyPaymentTotal).toLocaleString('no-NO')} kr i ${financing.loanYears} år (${state.interestRate}% rente)</li>
-                            <li>• Total rentekostnad: ${Math.round(financing.totalInterest).toLocaleString('no-NO')} kr over hele perioden</li>
+                            <li>• ${lenders.length} ${lenders.length === 1 ? 'person låner' : 'personer låner'} ut totalt ${financing.totalLent.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr</li>
+                            <li>• ${borrowers.length} ${borrowers.length === 1 ? 'person låner' : 'personer låner'} totalt ${financing.totalBorrowed.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr</li>
+                            <li>• Månedlige betalinger på ${financing.monthlyPaymentTotal.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr i ${financing.loanYears} år (${state.interestRate}% rente)</li>
+                            <li>• Total rentekostnad: ${financing.totalInterest.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr over hele perioden</li>
                         </ul>
                     `;
                     $('#explanation').html(explanationHtml);
@@ -649,7 +653,7 @@
                 const boat = {
                     id: Date.now(),
                     name: $('#boat-name').val(),
-                    price: parseInt($('#boat-form-price').val()),
+                    price: parseFloat($('#boat-form-price').val()) || 0,
                     year: $('#boat-year').val(),
                     length: $('#boat-length').val(),
                     engine: $('#boat-engine').val(),
