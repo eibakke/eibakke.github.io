@@ -425,133 +425,209 @@
                 calculateFinancing();
             });
 
-            function calculateFinancing() {
-                const equalShare = state.boatPrice / state.familySize;
+            // Enhanced financing calculation based on documentation
+            function calculateBoatFinancing(boatPrice, contributions, interestRate, years) {
+                const result = {
+                    boatPrice: boatPrice,
+                    numberOfPeople: contributions.length,
+                    equalShare: boatPrice / contributions.length,
+                    breakdown: [],
+                    totalUpfront: 0
+                };
 
-                // Calculate each person's position
-                const positions = state.personContributions.map(person => {
+                // Step 1: Calculate positions and totals
+                let totalLent = 0;
+                let totalBorrowed = 0;
+
+                contributions.forEach(function(person) {
                     const amount = person.amount || 0;
-                    return {
-                        ...person,
-                        amount,
-                        equalShare,
-                        excess: amount - equalShare,
-                        isLender: amount > equalShare,
-                        isBorrower: amount < equalShare,
-                        isNeutral: amount === equalShare
-                    };
+                    const excess = amount - result.equalShare;
+                    const position = excess > 0 ? "lender" : excess < 0 ? "borrower" : "neutral";
+
+                    if (excess > 0) totalLent += excess;
+                    if (excess < 0) totalBorrowed += Math.abs(excess);
+
+                    result.breakdown.push({
+                        id: person.id,
+                        name: person.name,
+                        amount: amount,
+                        equalShare: result.equalShare,
+                        excess: excess,
+                        position: position,
+                        isLender: position === "lender",
+                        isBorrower: position === "borrower",
+                        isNeutral: position === "neutral"
+                    });
+
+                    result.totalUpfront += amount;
                 });
 
-                // Separate lenders and borrowers
-                const lenders = positions.filter(p => p.isLender);
-                const borrowers = positions.filter(p => p.isBorrower);
+                // Step 2: Calculate loan parameters
+                result.internalLoanAmount = Math.min(totalLent, totalBorrowed);
+                result.totalLent = totalLent;
+                result.totalBorrowed = totalBorrowed;
 
-                // Calculate totals
-                const totalLent = lenders.reduce((sum, p) => sum + p.excess, 0);
-                const totalBorrowed = borrowers.reduce((sum, p) => sum + Math.abs(p.excess), 0);
+                const monthlyRate = interestRate / 100 / 12;
+                const numPayments = years * 12;
 
-                // Calculate monthly payment for the total internal loan
-                const loanAmount = Math.min(totalLent, totalBorrowed);
-                const monthlyRate = state.interestRate / 100 / 12;
-                const numPayments = state.loanYears * 12;
-
-                let monthlyPaymentTotal = 0;
-                if (loanAmount > 0 && monthlyRate > 0) {
-                    monthlyPaymentTotal = loanAmount *
-                        (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
-                        (Math.pow(1 + monthlyRate, numPayments) - 1);
-                } else if (loanAmount > 0) {
-                    monthlyPaymentTotal = loanAmount / numPayments;
+                result.monthlyPaymentTotal = 0;
+                if (result.internalLoanAmount > 0) {
+                    if (monthlyRate > 0) {
+                        // Standard loan amortization formula
+                        result.monthlyPaymentTotal = result.internalLoanAmount *
+                            (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+                            (Math.pow(1 + monthlyRate, numPayments) - 1);
+                    } else {
+                        // No interest case
+                        result.monthlyPaymentTotal = result.internalLoanAmount / numPayments;
+                    }
                 }
 
-                // Calculate individual monthly flows
-                const breakdown = positions.map(person => {
-                    let monthlyPayment = 0;
-                    let monthlyReceived = 0;
+                // Step 3: Calculate individual payments
+                result.breakdown.forEach(function(person) {
+                    person.monthlyPayment = 0;
+                    person.monthlyReceived = 0;
 
-                    if (person.isBorrower && totalBorrowed > 0) {
+                    if (person.position === "borrower" && totalBorrowed > 0) {
+                        // Calculate this borrower's proportional share
                         const borrowerShare = Math.abs(person.excess) / totalBorrowed;
-                        monthlyPayment = borrowerShare * monthlyPaymentTotal;
-                    } else if (person.isLender && totalLent > 0) {
+                        person.monthlyPayment = borrowerShare * result.monthlyPaymentTotal;
+
+                    } else if (person.position === "lender" && totalLent > 0) {
+                        // Calculate this lender's proportional share
                         const lenderShare = person.excess / totalLent;
-                        monthlyReceived = lenderShare * monthlyPaymentTotal;
+                        person.monthlyReceived = lenderShare * result.monthlyPaymentTotal;
                     }
 
-                    return {
-                        ...person,
-                        monthlyPayment,
-                        monthlyReceived,
-                        netMonthly: monthlyReceived - monthlyPayment
-                    };
+                    person.netMonthly = person.monthlyReceived - person.monthlyPayment;
                 });
 
-                const totalInterest = (monthlyPaymentTotal * numPayments) - loanAmount;
-                const totalUpfront = state.personContributions.reduce((sum, p) => sum + (p.amount || 0), 0);
+                result.totalInterest = (result.monthlyPaymentTotal * numPayments) - result.internalLoanAmount;
+                result.loanMonths = numPayments;
+                result.loanYears = years;
 
-                // Update display
-                $('#total-upfront').text(totalUpfront.toLocaleString('no-NO') + ' kr');
-                $('#monthly-payment').text(Math.round(monthlyPaymentTotal).toLocaleString('no-NO') + ' kr');
-                $('#total-interest').text(Math.round(totalInterest).toLocaleString('no-NO') + ' kr');
+                return result;
+            }
 
-                // Update person breakdown
+            function calculateFinancing() {
+                // Validate that total contributions equal boat price
+                const totalContributions = state.personContributions.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+                // Calculate financing using the enhanced algorithm
+                const financing = calculateBoatFinancing(
+                    state.boatPrice,
+                    state.personContributions,
+                    state.interestRate,
+                    state.loanYears
+                );
+
+                // Update summary display
+                $('#total-upfront').text(financing.totalUpfront.toLocaleString('no-NO') + ' kr');
+                $('#monthly-payment').text(Math.round(financing.monthlyPaymentTotal || 0).toLocaleString('no-NO') + ' kr');
+                $('#total-interest').text(Math.round(financing.totalInterest || 0).toLocaleString('no-NO') + ' kr');
+
+                // Add validation warning if contributions don't equal boat price
+                const summaryContainer = $('#total-upfront').parent().parent();
+                $('.contribution-warning').remove();
+
+                if (Math.abs(totalContributions - state.boatPrice) > 0.01) {
+                    const difference = totalContributions - state.boatPrice;
+                    const warningHtml = `
+                        <div class="contribution-warning mt-4 p-3 rounded ${difference > 0 ? 'bg-yellow-50 border-l-4 border-yellow-400' : 'bg-red-50 border-l-4 border-red-400'}">
+                            <div class="text-sm ${difference > 0 ? 'text-yellow-700' : 'text-red-700'}">
+                                <strong>⚠️ Varsel:</strong> Totale forskudd (${totalContributions.toLocaleString('no-NO')} kr)
+                                ${difference > 0 ? 'overstiger' : 'underskyter'} båtprisen med ${Math.abs(difference).toLocaleString('no-NO')} kr
+                            </div>
+                        </div>
+                    `;
+                    summaryContainer.append(warningHtml);
+                }
+
+                // Update person breakdown with enhanced display
                 const breakdownContainer = $('#person-breakdown');
                 breakdownContainer.empty();
 
-                breakdown.forEach(person => {
+                financing.breakdown.forEach(person => {
+                    const statusText = person.position === "lender" ? `Låner ut ${Math.abs(person.excess).toLocaleString('no-NO')} kr` :
+                                     person.position === "borrower" ? `Låner ${Math.abs(person.excess).toLocaleString('no-NO')} kr` :
+                                     "Betaler eksakt sin andel";
+
+                    const monthlyText = person.position === "lender" ? `Mottar ${Math.round(person.monthlyReceived).toLocaleString('no-NO')} kr/mnd i ${financing.loanYears} år` :
+                                      person.position === "borrower" ? `Betaler ${Math.round(person.monthlyPayment).toLocaleString('no-NO')} kr/mnd i ${financing.loanYears} år` :
+                                      "Ingen månedlige betalinger";
+
                     const html = `
                         <div class="bg-white p-4 rounded border">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">${person.name}</span>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-medium text-lg">${person.name}</span>
                                 <span class="text-sm text-gray-500">${(100/state.familySize).toFixed(1)}% eierandel</span>
                             </div>
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
-                                <div>
-                                    <span class="text-gray-600">Forskudd:</span>
-                                    <div class="font-semibold">${person.amount.toLocaleString('no-NO')} kr</div>
+
+                            <div class="grid md:grid-cols-2 gap-4 mb-3">
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <div class="text-sm text-gray-600">Forskudd betalt:</div>
+                                    <div class="text-xl font-bold">${person.amount.toLocaleString('no-NO')} kr</div>
+                                    <div class="text-xs text-gray-500">Lik andel: ${Math.round(person.equalShare).toLocaleString('no-NO')} kr</div>
                                 </div>
-                                <div>
-                                    <span class="text-gray-600">Lik andel:</span>
-                                    <div class="font-semibold">${Math.round(person.equalShare).toLocaleString('no-NO')} kr</div>
-                                </div>
-                                <div>
-                                    <span class="text-gray-600">Overskudd/Underskudd:</span>
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <div class="text-sm text-gray-600">Status:</div>
                                     <div class="font-semibold ${person.excess > 0 ? 'text-green-600' : person.excess < 0 ? 'text-red-600' : 'text-gray-600'}">
-                                        ${person.excess > 0 ? '+' : ''}${Math.round(person.excess).toLocaleString('no-NO')} kr
+                                        ${statusText}
                                     </div>
-                                </div>
-                                <div>
-                                    <span class="text-gray-600">Betaler månedlig:</span>
-                                    <div class="font-semibold text-red-600">${Math.round(person.monthlyPayment).toLocaleString('no-NO')} kr</div>
-                                </div>
-                                <div>
-                                    <span class="text-gray-600">Mottar månedlig:</span>
-                                    <div class="font-semibold text-green-600">${Math.round(person.monthlyReceived).toLocaleString('no-NO')} kr</div>
+                                    <div class="text-xs text-gray-500 mt-1">${monthlyText}</div>
                                 </div>
                             </div>
-                            <div class="mt-3 pt-3 border-t">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-gray-600 font-medium">Netto månedlig:</span>
-                                    <div class="font-bold text-lg ${person.netMonthly > 0 ? 'text-green-600' : person.netMonthly < 0 ? 'text-red-600' : 'text-gray-600'}">
-                                        ${person.netMonthly > 0 ? '+' : ''}${Math.round(person.netMonthly).toLocaleString('no-NO')} kr
-                                        ${person.netMonthly > 0 ? ' (mottar)' : person.netMonthly < 0 ? ' (betaler)' : ' (utlignet)'}
+
+                            ${person.position !== "neutral" ? `
+                                <div class="border-t pt-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-600 font-medium">Månedlig netto:</span>
+                                        <div class="text-right">
+                                            <div class="font-bold text-lg ${person.netMonthly > 0 ? 'text-green-600' : 'text-red-600'}">
+                                                ${person.netMonthly > 0 ? '+' : ''}${Math.round(person.netMonthly).toLocaleString('no-NO')} kr
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                ${person.netMonthly > 0 ? 'mottar' : 'betaler'} i ${financing.loanYears} år
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    ${financing.totalInterest > 0 ? `
+                                        <div class="mt-2 text-sm text-blue-600">
+                                            💰 ${person.position === "lender" ? 'Tjener' : 'Betaler'} totalt
+                                            ${Math.round((person.position === "lender" ? person.monthlyReceived : person.monthlyPayment) * financing.loanMonths - Math.abs(person.excess)).toLocaleString('no-NO')} kr
+                                            i renter
+                                        </div>
+                                    ` : ''}
                                 </div>
-                            </div>
-                            ${(person.isLender || person.isBorrower) ? `
-                                <div class="mt-2 text-sm text-blue-600">
-                                    ⏱️ Utlignet etter ${state.loanYears * 12} måneder (${state.loanYears} år)
+                            ` : `
+                                <div class="border-t pt-3 text-center">
+                                    <span class="text-gray-600 font-medium">✅ Ingen månedlige betalinger nødvendig</span>
                                 </div>
-                            ` : ''}
+                            `}
                         </div>
                     `;
                     breakdownContainer.append(html);
                 });
 
-                // Show/hide explanation
-                if (loanAmount > 0) {
+                // Enhanced explanation
+                if (financing.internalLoanAmount > 0) {
                     $('#explanation').removeClass('hidden');
-                    $('#ownership-explanation').text(`• Alle eier like store andeler av båten (${(100/state.familySize).toFixed(1)}% hver)`);
-                    $('#payoff-explanation').text(`• Etter ${state.loanYears} år er alle utlignet`);
+
+                    const lenders = financing.breakdown.filter(p => p.position === "lender");
+                    const borrowers = financing.breakdown.filter(p => p.position === "borrower");
+
+                    const explanationHtml = `
+                        <h4 class="font-semibold text-yellow-800 mb-2">💡 Slik fungerer den interne finansieringen:</h4>
+                        <ul class="text-sm text-yellow-700 space-y-1">
+                            <li>• Alle eier like store andeler av båten (${(100/state.familySize).toFixed(1)}% hver)</li>
+                            <li>• ${lenders.length} ${lenders.length === 1 ? 'person låner' : 'personer låner'} ut totalt ${financing.totalLent.toLocaleString('no-NO')} kr</li>
+                            <li>• ${borrowers.length} ${borrowers.length === 1 ? 'person låner' : 'personer låner'} totalt ${financing.totalBorrowed.toLocaleString('no-NO')} kr</li>
+                            <li>• Månedlige betalinger på ${Math.round(financing.monthlyPaymentTotal).toLocaleString('no-NO')} kr i ${financing.loanYears} år (${state.interestRate}% rente)</li>
+                            <li>• Total rentekostnad: ${Math.round(financing.totalInterest).toLocaleString('no-NO')} kr over hele perioden</li>
+                        </ul>
+                    `;
+                    $('#explanation').html(explanationHtml);
                 } else {
                     $('#explanation').addClass('hidden');
                 }
