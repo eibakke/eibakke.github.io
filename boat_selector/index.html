@@ -188,7 +188,18 @@
                 </div>
 
                 <div class="bg-green-50 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4">Finansieringssammendrag:</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Finansieringssammendrag:</h3>
+                        <button id="share-financing-btn" class="btn btn-primary flex items-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+                            </svg>
+                            Del konfigurasjon
+                        </button>
+                    </div>
+                    <div id="share-success-message" class="hidden mb-4 p-3 bg-green-100 text-green-700 rounded">
+                        ✓ Lenke kopiert til utklippstavlen!
+                    </div>
                     <div class="grid md:grid-cols-3 gap-4 mb-6">
                         <div class="bg-white p-4 rounded text-center">
                             <div id="total-upfront" class="text-2xl font-bold text-blue-600">0 kr</div>
@@ -239,6 +250,82 @@
                 financingPeople: 4  // Separate count for financing calculator
             };
 
+            // URL State Management
+            function encodeStateToURL() {
+                const financingData = {
+                    bp: state.boatPrice,  // boat price
+                    ir: state.interestRate,  // interest rate
+                    ly: state.loanYears,  // loan years
+                    ac: state.annualCosts,  // annual costs
+                    fp: state.financingPeople,  // financing people count
+                    pc: state.personContributions.map(p => ({
+                        n: p.name,  // name
+                        a: p.amount  // amount
+                    }))
+                };
+
+                // Only include financing data if we're on the financing tab
+                if ($('#tab-financing').hasClass('active')) {
+                    const encoded = btoa(JSON.stringify(financingData));
+                    const url = new URL(window.location);
+                    url.searchParams.set('fin', encoded);
+                    url.searchParams.set('tab', 'financing');
+                    return url.toString();
+                }
+                return window.location.href;
+            }
+
+            function decodeURLToState() {
+                const params = new URLSearchParams(window.location.search);
+                const finData = params.get('fin');
+                const tab = params.get('tab');
+
+                if (finData) {
+                    try {
+                        const decoded = JSON.parse(atob(finData));
+
+                        // Update state with decoded data
+                        state.boatPrice = decoded.bp || 750000;
+                        state.interestRate = decoded.ir || 4.5;
+                        state.loanYears = decoded.ly || 5;
+                        state.annualCosts = decoded.ac || 0;
+                        state.financingPeople = decoded.fp || 4;
+
+                        // Reconstruct person contributions
+                        if (decoded.pc && decoded.pc.length > 0) {
+                            state.personContributions = decoded.pc.map((p, index) => ({
+                                id: index + 1,
+                                name: p.n || `Person ${index + 1}`,
+                                amount: p.a || 0
+                            }));
+                            state.financingPeople = decoded.pc.length;
+                        }
+
+                        // Update UI with decoded values
+                        $('#boat-price').val(state.boatPrice);
+                        $('#interest-rate').val(state.interestRate);
+                        $('#loan-years').val(state.loanYears);
+                        $('#annual-costs').val(state.annualCosts);
+                        $('#financing-people-count').text(state.financingPeople);
+
+                        // Switch to financing tab if specified
+                        if (tab === 'financing') {
+                            $('#tab-financing').click();
+                        }
+
+                        return true;
+                    } catch (e) {
+                        console.error('Failed to decode URL state:', e);
+                    }
+                }
+                return false;
+            }
+
+            function updateURL() {
+                const newURL = encodeStateToURL();
+                window.history.replaceState({}, '', newURL);
+            }
+
             // Cost percentages by boat type
             const costPercentages = {
                 motorboat: { avg: 0.07 },  // Sjekte/Sjark
@@ -280,7 +367,46 @@
                     // Update display and recalculate when switching to financing tab
                     $('#financing-people-count').text(state.financingPeople);
                     calculateFinancing();
+                } else {
+                    // Clear URL parameters when switching to budget tab
+                    const url = new URL(window.location);
+                    url.searchParams.delete('fin');
+                    url.searchParams.delete('tab');
+                    window.history.replaceState({}, '', url.pathname);
                 }
+            });
+
+            // Share button functionality
+            $('#share-financing-btn').click(function() {
+                const shareURL = encodeStateToURL();
+
+                // Copy to clipboard
+                navigator.clipboard.writeText(shareURL).then(function() {
+                    // Show success message
+                    $('#share-success-message').removeClass('hidden');
+
+                    // Hide message after 3 seconds
+                    setTimeout(function() {
+                        $('#share-success-message').addClass('hidden');
+                    }, 3000);
+                }).catch(function(err) {
+                    // Fallback for older browsers
+                    const textArea = document.createElement("textarea");
+                    textArea.value = shareURL;
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        $('#share-success-message').removeClass('hidden');
+                        setTimeout(function() {
+                            $('#share-success-message').addClass('hidden');
+                        }, 3000);
+                    } catch (err) {
+                        alert('Kunne ikke kopiere lenken. URL: ' + shareURL);
+                    }
+                    document.body.removeChild(textArea);
+                });
             });
 
             // Budget calculator functionality
@@ -533,6 +659,11 @@
                     state.annualCosts
                 );
 
+                // Update URL with current state if on financing tab
+                if ($('#tab-financing').hasClass('active')) {
+                    updateURL();
+                }
+
                 // Update summary display with precise formatting
                 $('#total-upfront').text(financing.totalUpfront.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
 
@@ -696,8 +827,16 @@
             $('.tab-button.active').removeClass('text-gray-700 hover:bg-gray-100').addClass('bg-blue-600 text-white');
             $('.boat-type-btn.active').removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('bg-blue-600 text-white');
 
-            updateBudgetDisplay();
-            initFinancingContributions();  // Initialize with financing people count
+            // Check for URL parameters and load state if present
+            const hasURLState = decodeURLToState();
+            if (hasURLState) {
+                // If we loaded from URL, initialize with the loaded data
+                initFinancingContributions();
+            } else {
+                // Otherwise, initialize with defaults
+                updateBudgetDisplay();
+                initFinancingContributions();
+            }
         });
     </script>
 </body>
