@@ -50,9 +50,6 @@
             <button id="tab-financing" class="flex-1 py-2 px-4 rounded-md text-sm font-medium tab-button">
                 Intern Finansiering
             </button>
-            <button id="tab-boats" class="flex-1 py-2 px-4 rounded-md text-sm font-medium tab-button">
-                Foreslåtte Båter
-            </button>
         </div>
 
         <!-- Budget Calculator Tab -->
@@ -175,6 +172,11 @@
                                 <input type="number" id="loan-years" value="5" class="input-field" step="0.1" min="0.1" max="30">
                             </div>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Årlige driftskostnader (NOK):</label>
+                            <input type="number" id="annual-costs" value="0" class="input-field" step="0.01" min="0">
+                            <p class="text-xs text-gray-600 mt-1">F.eks. forsikring, vedlikehold, vinteropplag, etc.</p>
+                        </div>
                     </div>
 
                     <div class="space-y-4">
@@ -220,79 +222,6 @@
             </div>
         </div>
 
-        <!-- Boats List Tab -->
-        <div id="boats-content" class="tab-content hidden">
-            <div class="space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                        </svg>
-                        <span id="boats-count">Foreslåtte Båter (0)</span>
-                    </h2>
-                    <button id="add-boat-btn" class="btn btn-green flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Legg til båt
-                    </button>
-                </div>
-
-                <div id="boats-list" class="space-y-4">
-                    <div id="no-boats" class="text-center py-12 text-gray-500">
-                        <p>Ingen båter er lagt til ennå.</p>
-                        <p>Bruk budsjettkalkulatoren for å finne båter på Finn.no, eller legg til en båt manuelt.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Boat Modal -->
-    <div id="add-boat-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 class="text-lg font-semibold mb-4">Legg til båt</h3>
-            <form id="add-boat-form">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Navn/Modell:</label>
-                        <input type="text" id="boat-name" required class="input-field">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Pris (NOK):</label>
-                            <input type="number" id="boat-form-price" required class="input-field" step="0.01" min="0">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Årsmodell:</label>
-                            <input type="number" id="boat-year" class="input-field">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Lengde:</label>
-                            <input type="text" id="boat-length" class="input-field" placeholder="f.eks. 7,5m">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Motor:</label>
-                            <input type="text" id="boat-engine" class="input-field" placeholder="f.eks. 200 HK">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Finn.no lenke:</label>
-                        <input type="url" id="boat-url" class="input-field">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Beskrivelse:</label>
-                        <textarea id="boat-description" class="input-field h-20" placeholder="Hvorfor tror du denne båten passer for familien?"></textarea>
-                    </div>
-                    <div class="flex gap-3 pt-4">
-                        <button type="submit" class="flex-1 btn btn-primary">Legg til båt</button>
-                        <button type="button" id="cancel-add-boat" class="btn btn-secondary">Avbryt</button>
-                    </div>
-                </div>
-            </form>
-        </div>
     </div>
 
     <script>
@@ -305,7 +234,7 @@
                 boatPrice: 750000,
                 interestRate: 4.5,
                 loanYears: 5,
-                savedBoats: [],
+                annualCosts: 0,  // Annual recurring costs
                 personContributions: [],
                 financingPeople: 4  // Separate count for financing calculator
             };
@@ -472,7 +401,7 @@
                 });
             }
 
-            $('#boat-price, #interest-rate, #loan-years').on('input', function() {
+            $('#boat-price, #interest-rate, #loan-years, #annual-costs').on('input', function() {
                 const field = $(this).attr('id').replace('-', '');
                 const value = $(this).val();
 
@@ -482,16 +411,21 @@
                     state.interestRate = value === '' ? 0 : parseFloat(value);
                 } else if (field === 'loanyears') {
                     state.loanYears = value === '' ? 1 : parseFloat(value);
+                } else if (field === 'annualcosts') {
+                    state.annualCosts = value === '' ? 0 : parseFloat(value);
                 }
                 calculateFinancing();
             });
 
             // Enhanced financing calculation based on documentation
-            function calculateBoatFinancing(boatPrice, contributions, interestRate, years) {
+            function calculateBoatFinancing(boatPrice, contributions, interestRate, years, annualCosts) {
                 const result = {
                     boatPrice: boatPrice,
                     numberOfPeople: contributions.length,
                     equalShare: boatPrice / contributions.length,
+                    annualCosts: annualCosts || 0,
+                    annualCostPerPerson: (annualCosts || 0) / contributions.length,
+                    monthlyCostPerPerson: (annualCosts || 0) / contributions.length / 12,
                     breakdown: [],
                     totalUpfront: 0
                 };
@@ -544,20 +478,36 @@
                     }
                 }
 
-                // Step 3: Calculate individual payments
+                // Step 3: Calculate individual payments including recurring costs
                 result.breakdown.forEach(function(person) {
                     person.monthlyPayment = 0;
                     person.monthlyReceived = 0;
+                    person.monthlyCostShare = result.monthlyCostPerPerson;
 
                     if (person.position === "borrower" && totalBorrowed > 0) {
-                        // Calculate this borrower's proportional share
+                        // Calculate this borrower's proportional share of loan payment
                         const borrowerShare = Math.abs(person.excess) / totalBorrowed;
                         person.monthlyPayment = borrowerShare * result.monthlyPaymentTotal;
 
+                        // Borrowers also pay the lenders' share of recurring costs during loan period
+                        if (totalLent > 0 && result.monthlyCostPerPerson > 0) {
+                            // Each borrower pays a proportional share of all lenders' costs
+                            const lendersCostShare = (totalLent / result.boatPrice) * result.annualCosts / 12;
+                            person.monthlyCostPayment = borrowerShare * lendersCostShare;
+                            person.monthlyPayment += person.monthlyCostPayment;
+                        }
+
                     } else if (person.position === "lender" && totalLent > 0) {
-                        // Calculate this lender's proportional share
+                        // Calculate this lender's proportional share of loan payment received
                         const lenderShare = person.excess / totalLent;
                         person.monthlyReceived = lenderShare * result.monthlyPaymentTotal;
+
+                        // Lenders receive their share of recurring costs from borrowers
+                        if (totalBorrowed > 0 && result.monthlyCostPerPerson > 0) {
+                            // This lender's costs are covered by borrowers
+                            person.monthlyCostReceived = result.monthlyCostPerPerson;
+                            person.monthlyReceived += person.monthlyCostReceived;
+                        }
                     }
 
                     person.netMonthly = person.monthlyReceived - person.monthlyPayment;
@@ -579,12 +529,22 @@
                     state.boatPrice,
                     state.personContributions,
                     state.interestRate,
-                    state.loanYears
+                    state.loanYears,
+                    state.annualCosts
                 );
 
                 // Update summary display with precise formatting
                 $('#total-upfront').text(financing.totalUpfront.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
-                $('#monthly-payment').text((financing.monthlyPaymentTotal || 0).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
+
+                // Calculate total monthly payment including recurring costs for lenders
+                let totalMonthlyWithCosts = financing.monthlyPaymentTotal || 0;
+                if (financing.annualCosts > 0 && financing.totalLent > 0 && financing.totalBorrowed > 0) {
+                    // Add the lenders' share of monthly costs that borrowers will pay
+                    const lenderCount = financing.breakdown.filter(p => p.position === "lender").length;
+                    totalMonthlyWithCosts += lenderCount * financing.monthlyCostPerPerson;
+                }
+
+                $('#monthly-payment').text(totalMonthlyWithCosts.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
                 $('#total-interest').text((financing.totalInterest || 0).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kr');
 
                 // Add validation warning if contributions don't equal boat price
@@ -613,9 +573,25 @@
                                      person.position === "borrower" ? `Låner ${Math.abs(person.excess).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr` :
                                      "Betaler eksakt sin andel";
 
-                    const monthlyText = person.position === "lender" ? `Mottar ${person.monthlyReceived.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i ${financing.loanYears} år` :
-                                      person.position === "borrower" ? `Betaler ${person.monthlyPayment.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i ${financing.loanYears} år` :
-                                      "Ingen månedlige betalinger";
+                    // Build monthly text with breakdown if there are recurring costs
+                    let monthlyText = "";
+                    if (person.position === "lender") {
+                        if (financing.annualCosts > 0 && person.monthlyCostReceived > 0) {
+                            const loanReceived = person.monthlyReceived - person.monthlyCostReceived;
+                            monthlyText = `Mottar ${person.monthlyReceived.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd (${loanReceived.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr lån + ${person.monthlyCostReceived.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr drift) i ${financing.loanYears} år`;
+                        } else {
+                            monthlyText = `Mottar ${person.monthlyReceived.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i ${financing.loanYears} år`;
+                        }
+                    } else if (person.position === "borrower") {
+                        if (financing.annualCosts > 0 && person.monthlyCostPayment > 0) {
+                            const loanPayment = person.monthlyPayment - person.monthlyCostPayment;
+                            monthlyText = `Betaler ${person.monthlyPayment.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd (${loanPayment.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr lån + ${person.monthlyCostPayment.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr drift) i ${financing.loanYears} år`;
+                        } else {
+                            monthlyText = `Betaler ${person.monthlyPayment.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i ${financing.loanYears} år`;
+                        }
+                    } else {
+                        monthlyText = "Ingen månedlige betalinger";
+                    }
 
                     const html = `
                         <div class="bg-white p-4 rounded border">
@@ -660,10 +636,20 @@
                                             i renter
                                         </div>
                                     ` : ''}
+                                    ${financing.annualCosts > 0 ? `
+                                        <div class="mt-2 text-sm text-gray-600">
+                                            📅 Etter låneperioden: ${person.monthlyCostShare.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i driftskostnader
+                                        </div>
+                                    ` : ''}
                                 </div>
                             ` : `
                                 <div class="border-t pt-3 text-center">
                                     <span class="text-gray-600 font-medium">✅ Ingen månedlige betalinger nødvendig</span>
+                                    ${financing.annualCosts > 0 ? `
+                                        <div class="mt-2 text-sm text-gray-600">
+                                            📅 Betaler ${person.monthlyCostShare.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd i driftskostnader
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `}
                         </div>
@@ -678,7 +664,7 @@
                     const lenders = financing.breakdown.filter(p => p.position === "lender");
                     const borrowers = financing.breakdown.filter(p => p.position === "borrower");
 
-                    const explanationHtml = `
+                    let explanationHtml = `
                         <h4 class="font-semibold text-yellow-800 mb-2">💡 Slik fungerer den interne finansieringen:</h4>
                         <ul class="text-sm text-yellow-700 space-y-1">
                             <li>• Alle eier like store andeler av båten (${(100/state.financingPeople).toFixed(1)}% hver)</li>
@@ -686,147 +672,25 @@
                             <li>• ${borrowers.length} ${borrowers.length === 1 ? 'person låner' : 'personer låner'} totalt ${financing.totalBorrowed.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr</li>
                             <li>• Månedlige betalinger på ${financing.monthlyPaymentTotal.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr i ${financing.loanYears} år (${state.interestRate}% rente)</li>
                             <li>• Total rentekostnad: ${financing.totalInterest.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr over hele perioden</li>
-                        </ul>
                     `;
+
+                    if (financing.annualCosts > 0) {
+                        const totalMonthlyCosts = financing.annualCosts / 12;
+                        const lendersCostShare = (lenders.length * financing.monthlyCostPerPerson).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        explanationHtml += `
+                            <li class="mt-2 font-semibold">📅 Årlige driftskostnader (${financing.annualCosts.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/år):</li>
+                            <li>• Under låneperioden: Låntakere dekker långivernes andel (${lendersCostShare} kr/mnd)</li>
+                            <li>• Etter låneperioden: Alle betaler sin egen andel (${financing.monthlyCostPerPerson.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr/mnd hver)</li>
+                        `;
+                    }
+
+                    explanationHtml += `</ul>`;
                     $('#explanation').html(explanationHtml);
                 } else {
                     $('#explanation').addClass('hidden');
                 }
             }
 
-            // Boats functionality
-            $('#add-boat-btn').click(function() {
-                $('#add-boat-modal').removeClass('hidden');
-            });
-
-            $('#cancel-add-boat').click(function() {
-                $('#add-boat-modal').addClass('hidden');
-                $('#add-boat-form')[0].reset();
-            });
-
-            $('#add-boat-form').submit(function(e) {
-                e.preventDefault();
-
-                const boat = {
-                    id: Date.now(),
-                    name: $('#boat-name').val(),
-                    price: parseFloat($('#boat-form-price').val()) || 0,
-                    year: $('#boat-year').val(),
-                    length: $('#boat-length').val(),
-                    engine: $('#boat-engine').val(),
-                    url: $('#boat-url').val(),
-                    description: $('#boat-description').val(),
-                    votes: { up: 0, down: 0 },
-                    dateAdded: new Date().toLocaleDateString('no-NO')
-                };
-
-                state.savedBoats.push(boat);
-                renderBoats();
-
-                $('#add-boat-modal').addClass('hidden');
-                $('#add-boat-form')[0].reset();
-            });
-
-            function renderBoats() {
-                const container = $('#boats-list');
-                const noBoats = $('#no-boats');
-
-                $('#boats-count').text(`Foreslåtte Båter (${state.savedBoats.length})`);
-
-                if (state.savedBoats.length === 0) {
-                    noBoats.removeClass('hidden');
-                    container.children().not('#no-boats').remove();
-                    return;
-                }
-
-                noBoats.addClass('hidden');
-                container.empty().append(noBoats);
-
-                // Sort boats by vote score
-                const sortedBoats = state.savedBoats.sort((a, b) =>
-                    (b.votes.up - b.votes.down) - (a.votes.up - a.votes.down)
-                );
-
-                sortedBoats.forEach(boat => {
-                    const html = `
-                        <div class="bg-white border border-gray-200 rounded-lg p-6 boat-item" data-id="${boat.id}">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 class="text-lg font-semibold">${boat.name}</h3>
-                                    <p class="text-2xl font-bold text-green-600">${boat.price.toLocaleString('no-NO')} kr</p>
-                                    <p class="text-sm text-gray-600">
-                                        Kostnad per person: ${Math.floor(boat.price / state.familySize).toLocaleString('no-NO')} kr
-                                    </p>
-                                </div>
-                                <button class="remove-boat text-gray-400 hover:text-red-500" data-id="${boat.id}">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div class="grid md:grid-cols-2 gap-4 mb-4">
-                                ${boat.year ? `<div class="text-sm"><span class="font-medium">Årsmodell:</span> ${boat.year}</div>` : ''}
-                                ${boat.length ? `<div class="text-sm"><span class="font-medium">Lengde:</span> ${boat.length}</div>` : ''}
-                                ${boat.engine ? `<div class="text-sm"><span class="font-medium">Motor:</span> ${boat.engine}</div>` : ''}
-                                <div class="text-sm"><span class="font-medium">Lagt til:</span> ${boat.dateAdded}</div>
-                            </div>
-
-                            ${boat.description ? `<p class="text-sm text-gray-700 mb-4">${boat.description}</p>` : ''}
-
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-4">
-                                    <button class="vote-btn flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
-                                            data-id="${boat.id}" data-vote="up">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                        </svg>
-                                        ${boat.votes.up}
-                                    </button>
-                                    <button class="vote-btn flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-                                            data-id="${boat.id}" data-vote="down">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                        ${boat.votes.down}
-                                    </button>
-                                    <span class="text-sm text-gray-500">
-                                        Score: ${boat.votes.up - boat.votes.down}
-                                    </span>
-                                </div>
-                                ${boat.url ? `
-                                    <a href="${boat.url}" target="_blank" rel="noopener noreferrer"
-                                       class="flex items-center gap-1 text-blue-600 hover:text-blue-800">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                        </svg>
-                                        Se på Finn
-                                    </a>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
-                    container.append(html);
-                });
-            }
-
-            // Boat voting and removal
-            $(document).on('click', '.vote-btn', function() {
-                const boatId = parseInt($(this).data('id'));
-                const vote = $(this).data('vote');
-                const boat = state.savedBoats.find(b => b.id === boatId);
-
-                if (boat) {
-                    boat.votes[vote]++;
-                    renderBoats();
-                }
-            });
-
-            $(document).on('click', '.remove-boat', function() {
-                const boatId = parseInt($(this).data('id'));
-                state.savedBoats = state.savedBoats.filter(b => b.id !== boatId);
-                renderBoats();
-            });
 
             // Initialize
             $('.tab-button.active').removeClass('text-gray-700 hover:bg-gray-100').addClass('bg-blue-600 text-white');
@@ -834,7 +698,6 @@
 
             updateBudgetDisplay();
             initFinancingContributions();  // Initialize with financing people count
-            renderBoats();
         });
     </script>
 </body>
