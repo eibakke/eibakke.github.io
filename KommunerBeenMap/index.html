@@ -19,8 +19,17 @@
 		</div>
 		<div id="counter">0 av 0 kommuner besøkt</div>
 		<div class="controls">
+			<button id="royal-btn">👑 Se Kongebesøk</button>
 			<button id="share-btn">🔗 Del liste</button>
 			<button id="clear-btn">Fjern alle</button>
+		</div>
+		<div id="royal-info" class="hidden">
+			<p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.5rem;">
+				Kong Harald og Dronning Sonja har besøkt <strong><span id="royal-count">0</span> av <span id="total-count">0</span></strong> kommuner.
+			</p>
+			<p style="font-size: 0.75rem; color: var(--color-text-light);">
+				Gjenværende 9 kommuner er markert med grått.
+			</p>
 		</div>
 		<div id="list-container">
 			<h3>Besøkte kommuner:</h3>
