@@ -1,85 +1,207 @@
-/* global styles */
+/* Design System - Unified Colors and Tokens */
+:root {
+  --color-primary: #2563eb;
+  --color-primary-dark: #1e40af;
+  --color-primary-light: #3b82f6;
+  --color-secondary: #10b981;
+  --color-accent: #f59e0b;
+  --color-background: #f9fafb;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-light: #9ca3af;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-	font-family: Arial, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* header styles */
+/* Header Styles */
 header {
-	background-color: #333;
-	color: #fff;
-	padding: 20px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
 }
 
-/* navigation styles */
+header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* Navigation Styles */
 #sidenav {
-  height: 100%; /* Full-height: remove this if you want "auto" height */
-  width: 300px; /* Set the width of the sidebar */
-  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
-  z-index: 1; /* Stay on top */
-  top: 0; /* Stay at the top */
+  width: 280px;
+  background-color: var(--color-surface);
+  padding: 2rem 1.5rem;
+  box-shadow: var(--shadow-lg);
+  position: fixed;
+  height: 100vh;
+  top: 0;
   left: 0;
-  background-color: #111; /* Black */
-  overflow-x: hidden; /* Disable horizontal scroll */
-  padding-top: 20px;
+  z-index: 100;
+  overflow-y: auto;
 }
 
-/* The navigation menu links */
+#sidenav section {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
 #sidenav a {
-  padding: 6px 8px 6px 16px;
+  display: block;
+  padding: 0.75rem 1rem;
   text-decoration: none;
-  font-size: 25px;
-  color: #818181;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+}
+
+#sidenav a:hover {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+#sidenav a span {
   display: block;
 }
 
-/* When you mouse over the navigation links, change their color */
-#sidenav a:hover {
-  color: #f1f1f1;
+#sidenav a div {
+  margin-top: 0.25rem;
 }
 
-#sidenav section{
-	color: #818181;
-}
-
-/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
-@media screen and (max-height: 450px) {
-  #sidenav {padding-top: 15px;}
-  #sidenav a {font-size: 18px;}
-}
-
+/* Content Area */
 #content {
-	margin-left: 300px;
-	padding: 0px 10px;
+  margin-left: 280px;
+  padding: 2rem;
+  flex: 1;
+  max-width: 1200px;
 }
 
-/* about styles */
+/* About Section */
 #about {
-	padding: 50px;
+  background-color: var(--color-surface);
+  padding: 3rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin: 2rem 0;
 }
 
 #about h2 {
-	font-size: 2rem;
-	margin-bottom: 20px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
 }
 
 #about p {
-	font-size: 1.2rem;
+  font-size: 1.125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.75;
 }
 
-/* portfolio styles */
+/* Portfolio Section */
 #portfolio {
-	padding: 50px;
+  padding: 2rem 0;
 }
 
 #portfolio h2 {
-	font-size: 2rem;
-	margin-bottom: 20px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
 }
 
-/* footer styles */
+/* Footer Styles */
 footer {
-	background-color: #333;
-	color: #fff;
-	padding: 20px;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+  margin-top: auto;
+  margin-left: 280px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  #sidenav {
+    width: 100%;
+    height: auto;
+    position: relative;
+    box-shadow: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  #content {
+    margin-left: 0;
+    padding: 1.5rem;
+  }
+
+  footer {
+    margin-left: 0;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  #about {
+    padding: 2rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  header {
+    padding: 1.5rem;
+  }
+
+  header h1 {
+    font-size: 1.75rem;
+  }
+
+  #about {
+    padding: 1.5rem;
+  }
+
+  #about h2 {
+    font-size: 1.5rem;
+  }
+
+  #about p {
+    font-size: 1rem;
+  }
 }
 
