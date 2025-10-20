@@ -335,15 +335,100 @@ path:hover {
   line-height: 1.3;
 }
 
+/* Show/hide help text based on device */
+.mobile-help {
+  display: none;
+}
+
+.desktop-help {
+  display: block;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .mobile-help {
+    display: block;
+  }
+
+  .desktop-help {
+    display: none;
+  }
+}
+
 #svg-container {
   width: 100%;
   height: 100%;
   overflow: hidden;
   cursor: grab;
+  touch-action: none; /* Better touch handling */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #svg-container.panning {
   cursor: grabbing;
+}
+
+/* Touch feedback */
+@media (hover: none) and (pointer: coarse) {
+  /* Mobile/touch devices only */
+  #svg-container {
+    cursor: default;
+  }
+
+  #svg-container.panning {
+    cursor: default;
+  }
+
+  /* Smoother touch interactions */
+  path {
+    touch-action: none;
+  }
+
+  /* Visual feedback when actively panning */
+  #svg-container.panning::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    background-color: rgba(37, 99, 235, 0.1);
+    border: 2px solid rgba(37, 99, 235, 0.3);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: panPulse 0.6s ease-in-out infinite;
+  }
+
+  @keyframes panPulse {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.2);
+      opacity: 0.8;
+    }
+  }
+
+  /* Improve zoom controls for mobile */
+  #zoom-controls {
+    top: 60px;
+    right: 10px;
+    padding: 8px;
+  }
+
+  #zoom-controls button {
+    width: 45px;
+    height: 45px;
+    font-size: 22px;
+    margin: 4px 0;
+  }
+
+  .zoom-help {
+    font-size: 10px;
+    padding: 4px;
+  }
 }
 
 #svg-container svg {
