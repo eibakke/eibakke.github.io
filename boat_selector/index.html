@@ -11,33 +11,71 @@
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <script>
+        // Configure Tailwind to use our unified design system colors
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#2563eb',
+                            dark: '#1e40af',
+                            light: '#3b82f6'
+                        },
+                        secondary: {
+                            DEFAULT: '#10b981',
+                            dark: '#059669',
+                            light: '#34d399'
+                        },
+                        accent: {
+                            DEFAULT: '#f59e0b',
+                            dark: '#d97706',
+                            light: '#fbbf24'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
+        /* Override default font to match design system */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
         .btn {
-            @apply px-4 py-2 rounded font-medium transition-colors;
+            @apply px-4 py-2 rounded-lg font-medium transition-all shadow-sm;
+        }
+        .btn:hover {
+            @apply shadow-md transform -translate-y-0.5;
         }
         .btn-primary {
-            @apply bg-blue-600 text-white hover:bg-blue-700;
+            @apply bg-primary text-white hover:bg-primary-dark;
         }
         .btn-secondary {
             @apply bg-gray-300 text-gray-700 hover:bg-gray-400;
         }
         .btn-green {
-            @apply bg-green-600 text-white hover:bg-green-700;
+            @apply bg-secondary text-white hover:bg-secondary-dark;
         }
         .btn-orange {
-            @apply bg-orange-600 text-white hover:bg-orange-700;
+            @apply bg-accent text-white hover:bg-accent-dark;
         }
         .input-field {
-            @apply w-full p-2 border border-gray-300 rounded;
+            @apply w-full p-2 border border-gray-300 rounded-lg transition-all;
+        }
+        .input-field:focus {
+            @apply outline-none ring-2 ring-primary border-primary;
         }
     </style>
 </head>
 <body class="min-h-screen bg-gray-50">
-    <div class="bg-white shadow-sm border-b">
+    <div class="bg-white shadow-md border-b">
         <div class="max-w-4xl mx-auto px-4 py-4">
+            <a href="../index.html" class="inline-block text-primary hover:bg-primary hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-all mb-2">← Tilbake til hovedsiden</a>
             <h1 class="text-2xl font-bold text-gray-900">Familie Båt Velger</h1>
             <p class="text-gray-600">Koordiner båtkjøp med familie og venner</p>
-            <a href="../index.html" class="text-blue-600 hover:text-blue-800 text-sm">← Tilbake til hovedsiden</a>
         </div>
     </div>
 
@@ -55,7 +93,7 @@
         <!-- Budget Calculator Tab -->
         <div id="budget-content" class="tab-content">
             <div class="space-y-6">
-                <div class="bg-blue-50 p-6 rounded-lg">
+                <div class="bg-blue-50 p-6 rounded-xl shadow-sm">
                     <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -98,26 +136,26 @@
                     </div>
                 </div>
 
-                <div class="bg-green-50 p-6 rounded-lg">
+                <div class="bg-green-50 p-6 rounded-xl shadow-sm">
                     <h3 class="text-lg font-semibold mb-3">Resultat:</h3>
                     <div class="grid md:grid-cols-3 gap-4 text-center">
-                        <div class="bg-white p-4 rounded">
-                            <div id="max-price" class="text-2xl font-bold text-green-600">714 286 kr</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <div id="max-price" class="text-2xl font-bold text-secondary">714 286 kr</div>
                             <div class="text-sm text-gray-600">Maks kjøpspris</div>
                         </div>
-                        <div class="bg-white p-4 rounded">
-                            <div id="annual-per-person" class="text-2xl font-bold text-blue-600">12 500 kr</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <div id="annual-per-person" class="text-2xl font-bold text-primary">12 500 kr</div>
                             <div class="text-sm text-gray-600">Årlig kostnad per person</div>
                         </div>
-                        <div class="bg-white p-4 rounded">
-                            <div id="monthly-per-person" class="text-2xl font-bold text-purple-600">1 041 kr</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <div id="monthly-per-person" class="text-2xl font-bold text-accent">1 041 kr</div>
                             <div class="text-sm text-gray-600">Måndelig kostnad per person</div>
                         </div>
                     </div>
 
                     <div class="mt-6 text-center">
                         <a id="finn-search-link" href="#" target="_blank" rel="noopener noreferrer"
-                           class="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700">
+                           class="inline-flex items-center gap-2 bg-accent text-white px-6 py-3 rounded-lg hover:bg-accent-dark shadow-sm hover:shadow-md transition-all">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                             </svg>
@@ -131,7 +169,7 @@
         <!-- Financing Calculator Tab -->
         <div id="financing-content" class="tab-content hidden">
             <div class="space-y-6">
-                <div class="bg-purple-50 p-6 rounded-lg">
+                <div class="bg-blue-50 p-6 rounded-xl shadow-sm">
                     <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -187,7 +225,7 @@
                     </div>
                 </div>
 
-                <div class="bg-green-50 p-6 rounded-lg">
+                <div class="bg-green-50 p-6 rounded-xl shadow-sm">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold">Finansieringssammendrag:</h3>
                         <button id="share-financing-btn" class="btn btn-primary flex items-center gap-2 text-sm">
@@ -197,20 +235,20 @@
                             Del konfigurasjon
                         </button>
                     </div>
-                    <div id="share-success-message" class="hidden mb-4 p-3 bg-green-100 text-green-700 rounded">
+                    <div id="share-success-message" class="hidden mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
                         ✓ Lenke kopiert til utklippstavlen!
                     </div>
                     <div class="grid md:grid-cols-3 gap-4 mb-6">
-                        <div class="bg-white p-4 rounded text-center">
-                            <div id="total-upfront" class="text-2xl font-bold text-blue-600">0 kr</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                            <div id="total-upfront" class="text-2xl font-bold text-primary">0 kr</div>
                             <div class="text-sm text-gray-600">Totalt forskudd</div>
                         </div>
-                        <div class="bg-white p-4 rounded text-center">
-                            <div id="monthly-payment" class="text-2xl font-bold text-green-600">0 kr</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                            <div id="monthly-payment" class="text-2xl font-bold text-secondary">0 kr</div>
                             <div class="text-sm text-gray-600">Måndelig betaling (internt)</div>
                         </div>
-                        <div class="bg-white p-4 rounded text-center">
-                            <div id="total-interest" class="text-2xl font-bold text-purple-600">0 kr</div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                            <div id="total-interest" class="text-2xl font-bold text-accent">0 kr</div>
                             <div class="text-sm text-gray-600">Total rente</div>
                         </div>
                     </div>
@@ -357,8 +395,8 @@
                 const tabId = $(this).attr('id');
                 const contentId = tabId.replace('tab-', '') + '-content';
 
-                $('.tab-button').removeClass('active bg-blue-600 text-white').addClass('text-gray-700 hover:bg-gray-100');
-                $(this).removeClass('text-gray-700 hover:bg-gray-100').addClass('active bg-blue-600 text-white');
+                $('.tab-button').removeClass('active bg-primary text-white').addClass('text-gray-700 hover:bg-gray-100');
+                $(this).removeClass('text-gray-700 hover:bg-gray-100').addClass('active bg-primary text-white');
 
                 $('.tab-content').addClass('hidden');
                 $('#' + contentId).removeClass('hidden');
@@ -428,8 +466,8 @@
             });
 
             $('.boat-type-btn').click(function() {
-                $('.boat-type-btn').removeClass('active bg-blue-600 text-white').addClass('bg-white border border-gray-300 hover:bg-gray-50');
-                $(this).removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('active bg-blue-600 text-white');
+                $('.boat-type-btn').removeClass('active bg-primary text-white').addClass('bg-white border border-gray-300 hover:bg-gray-50');
+                $(this).removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('active bg-primary text-white');
                 state.boatType = $(this).data('type');
                 updateBudgetDisplay();
             });
@@ -739,7 +777,7 @@
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded">
                                     <div class="text-sm text-gray-600">Status:</div>
-                                    <div class="font-semibold ${person.excess > 0 ? 'text-green-600' : person.excess < 0 ? 'text-red-600' : 'text-gray-600'}">
+                                    <div class="font-semibold ${person.excess > 0 ? 'text-secondary' : person.excess < 0 ? 'text-red-600' : 'text-gray-600'}">
                                         ${statusText}
                                     </div>
                                     <div class="text-xs text-gray-500 mt-1">${monthlyText}</div>
@@ -751,7 +789,7 @@
                                     <div class="flex justify-between items-center">
                                         <span class="text-gray-600 font-medium">Månedlig netto:</span>
                                         <div class="text-right">
-                                            <div class="font-bold text-lg ${person.netMonthly > 0 ? 'text-green-600' : 'text-red-600'}">
+                                            <div class="font-bold text-lg ${person.netMonthly > 0 ? 'text-secondary' : 'text-red-600'}">
                                                 ${person.netMonthly > 0 ? '+' : ''}${person.netMonthly.toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr
                                             </div>
                                             <div class="text-xs text-gray-500">
@@ -761,7 +799,7 @@
                                     </div>
 
                                     ${financing.totalInterest > 0 ? `
-                                        <div class="mt-2 text-sm text-blue-600">
+                                        <div class="mt-2 text-sm text-primary">
                                             💰 ${person.position === "lender" ? 'Tjener' : 'Betaler'} totalt
                                             ${((person.position === "lender" ? person.monthlyReceived : person.monthlyPayment) * financing.loanMonths - Math.abs(person.excess)).toLocaleString('no-NO', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kr
                                             i renter
@@ -824,8 +862,8 @@
 
 
             // Initialize
-            $('.tab-button.active').removeClass('text-gray-700 hover:bg-gray-100').addClass('bg-blue-600 text-white');
-            $('.boat-type-btn.active').removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('bg-blue-600 text-white');
+            $('.tab-button.active').removeClass('text-gray-700 hover:bg-gray-100').addClass('bg-primary text-white');
+            $('.boat-type-btn.active').removeClass('bg-white border border-gray-300 hover:bg-gray-50').addClass('bg-primary text-white');
 
             // Check for URL parameters and load state if present
             const hasURLState = decodeURLToState();
