@@ -324,16 +324,20 @@ path:hover {
   color: white;
   border: none;
   border-radius: var(--radius-md);
-  padding: 10px;
+  padding: 12px;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   transition: all 0.2s ease;
 }
 
 #mobile-menu-btn:hover {
   background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-lg);
+  transform: scale(1.05);
+}
+
+#mobile-menu-btn:active {
+  transform: scale(0.95);
 }
 
 /* Close button for mobile sidebar */

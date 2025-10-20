@@ -7,7 +7,18 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
+	<!-- Mobile menu button -->
+	<button id="mobile-menu-btn" class="mobile-only" aria-label="Open navigation menu">
+		<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+		</svg>
+	</button>
+
+	<!-- Sidebar overlay for mobile -->
+	<div class="sidebar-overlay"></div>
+
 	<div id="sidenav">
+		<button id="close-sidebar-btn" class="mobile-only" aria-label="Close navigation menu">×</button>
 		<h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; color: var(--color-primary);">Eivind Bakke</h2>
 		<section>Projects</section>
 		<a href="KommunerBeenMap/index.html">
@@ -30,6 +41,36 @@
 			<p>&copy; 2024 Eivind Bakke</p>
 		</footer>
 	</div>
+
+	<script>
+		// Mobile menu functionality
+		const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+		const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+		const sidebar = document.getElementById('sidenav');
+		const overlay = document.querySelector('.sidebar-overlay');
+
+		function openMenu() {
+			sidebar.classList.add('open');
+			overlay.classList.add('show');
+			document.body.style.overflow = 'hidden';
+		}
+
+		function closeMenu() {
+			sidebar.classList.remove('open');
+			overlay.classList.remove('show');
+			document.body.style.overflow = '';
+		}
+
+		mobileMenuBtn.addEventListener('click', openMenu);
+		closeSidebarBtn.addEventListener('click', closeMenu);
+		overlay.addEventListener('click', closeMenu);
+
+		// Close menu when clicking on a link
+		const sidebarLinks = sidebar.querySelectorAll('a');
+		sidebarLinks.forEach(link => {
+			link.addEventListener('click', closeMenu);
+		});
+	</script>
 </body>
 </html>
 
