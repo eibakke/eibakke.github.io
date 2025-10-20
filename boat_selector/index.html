@@ -68,6 +68,111 @@
         .input-field:focus {
             @apply outline-none ring-2 ring-primary border-primary;
         }
+
+        /* Mobile Responsive Enhancements */
+        @media (max-width: 768px) {
+            .tab-button {
+                font-size: 0.875rem;
+                padding: 0.625rem 0.75rem;
+            }
+
+            .boat-type-btn {
+                font-size: 0.875rem;
+                padding: 0.75rem 0.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.25rem;
+            }
+
+            /* Make grids single column on mobile */
+            .grid.md\:grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .grid.md\:grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            /* Larger touch targets for buttons */
+            button {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            /* Better spacing on mobile */
+            .space-y-6 > * + * {
+                margin-top: 1rem;
+            }
+
+            /* Improve number input on mobile */
+            input[type="number"] {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .max-w-4xl {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .tab-button {
+                font-size: 0.813rem;
+                padding: 0.5rem;
+            }
+
+            .boat-type-btn {
+                font-size: 0.75rem;
+                padding: 0.625rem 0.375rem;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+            }
+
+            h2 {
+                font-size: 1.125rem;
+            }
+
+            /* Smaller text in cards */
+            .text-2xl {
+                font-size: 1.5rem;
+            }
+
+            .text-xl {
+                font-size: 1.125rem;
+            }
+
+            /* Stack share button on mobile */
+            .flex.justify-between.items-center {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            /* Full width Finn.no button on mobile */
+            #finn-search-link {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Improve scroll behavior on mobile */
+        @media (max-width: 768px) {
+            body {
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Better padding for mobile containers */
+            .bg-blue-50, .bg-green-50 {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -128,7 +233,7 @@
 
                     <div class="mt-6">
                         <label class="block text-sm font-medium mb-2">Type båt:</label>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <button data-type="motorboat" class="boat-type-btn p-3 rounded text-sm active">Sjekte/Sjark</button>
                             <button data-type="sailboat" class="boat-type-btn p-3 rounded text-sm">Seilbåt</button>
                             <button data-type="speedboat" class="boat-type-btn p-3 rounded text-sm">Speedbåt/Bowrider</button>
