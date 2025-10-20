@@ -111,38 +111,132 @@ header h1 {
   max-width: 1200px;
 }
 
-/* About Section */
-#about {
-  background-color: var(--color-surface);
-  padding: 3rem;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  margin: 2rem 0;
+/* Hero Section */
+#hero {
+  text-align: center;
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
 }
 
-#about h2 {
-  font-size: 2rem;
-  font-weight: 700;
+#hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
   color: var(--color-primary);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
 }
 
-#about p {
-  font-size: 1.125rem;
+#hero .tagline {
+  font-size: 1.25rem;
   color: var(--color-text-secondary);
-  line-height: 1.75;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-/* Portfolio Section */
-#portfolio {
+/* Projects Section */
+#projects {
   padding: 2rem 0;
 }
 
-#portfolio h2 {
+.section-title {
   font-size: 2rem;
   font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Project Card */
+.project-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  background-color: var(--color-surface);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+  color: var(--color-text-primary);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+.project-card:hover .project-icon {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.project-card:hover .project-arrow {
+  transform: translateX(4px);
+}
+
+.project-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-background);
+  border-radius: var(--radius-md);
   color: var(--color-primary);
-  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.project-content {
+  flex: 1;
+}
+
+.project-content h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.project-content p {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--color-background);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.project-arrow {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  transition: transform 0.3s ease;
+  margin-top: 0.5rem;
 }
 
 /* Footer Styles */
@@ -239,8 +333,16 @@ footer {
     margin-left: 240px;
   }
 
-  #about {
-    padding: 2.5rem;
+  #hero h1 {
+    font-size: 2.5rem;
+  }
+
+  #hero .tagline {
+    font-size: 1.125rem;
+  }
+
+  .project-card {
+    padding: 1.5rem;
   }
 }
 
@@ -273,7 +375,7 @@ footer {
 
   #content {
     margin-left: 0;
-    padding: 1.5rem;
+    padding: 1rem;
     padding-top: 4rem;
   }
 
@@ -281,13 +383,60 @@ footer {
     margin-left: 0;
   }
 
-  #about {
-    padding: 2rem;
-    margin: 1rem 0;
+  /* Hero Mobile Styles */
+  #hero {
+    padding: 2rem 1rem;
   }
 
-  #about h2 {
+  #hero h1 {
+    font-size: 2.25rem;
+  }
+
+  #hero .tagline {
+    font-size: 1.125rem;
+  }
+
+  /* Projects Mobile Styles */
+  #projects {
+    padding: 1rem 0;
+  }
+
+  .section-title {
     font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .projects-grid {
+    gap: 1rem;
+  }
+
+  .project-card {
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+
+  .project-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .project-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .project-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .project-content p {
+    font-size: 0.938rem;
+  }
+
+  .project-arrow {
+    align-self: flex-end;
+    margin-top: 0;
   }
 
   #sidenav a {
@@ -311,20 +460,58 @@ footer {
   }
 
   #content {
-    padding: 1rem;
-    padding-top: 4rem;
+    padding: 0.75rem;
+    padding-top: 3.5rem;
   }
 
-  #about {
-    padding: 1.5rem;
+  /* Hero Small Mobile */
+  #hero {
+    padding: 1.5rem 0.75rem;
   }
 
-  #about h2 {
-    font-size: 1.5rem;
+  #hero h1 {
+    font-size: 1.875rem;
   }
 
-  #about p {
+  #hero .tagline {
     font-size: 1rem;
+  }
+
+  /* Projects Small Mobile */
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .projects-grid {
+    gap: 0.875rem;
+  }
+
+  .project-card {
+    padding: 1.25rem;
+  }
+
+  .project-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .project-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .project-content h3 {
+    font-size: 1.125rem;
+  }
+
+  .project-content p {
+    font-size: 0.875rem;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.188rem 0.625rem;
   }
 
   footer {
