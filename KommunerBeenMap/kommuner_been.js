@@ -444,10 +444,22 @@ $(document).ready(function() {
 	// Touch support for map
 	let touchStartDistance = 0;
 	let touchStartScale = 1;
-	
-	// Handle pinch zoom on mobile
+	let touchStartPos = {x: 0, y: 0};
+	let touchStartViewBox = null;
+	let isTouchPanning = false;
+	let touchMoveDistance = 0;
+
+	// Detect if we're at the top of the page
+	function isAtPageTop() {
+		return window.pageYOffset === 0 || window.scrollY === 0;
+	}
+
+	// Handle pinch zoom and single-finger pan on mobile
 	$('#svg-container').on('touchstart', function(e) {
+		touchMoveDistance = 0;
+
 		if (e.originalEvent.touches.length === 2) {
+			// Two fingers - pinch zoom
 			e.preventDefault();
 			const touch1 = e.originalEvent.touches[0];
 			const touch2 = e.originalEvent.touches[1];
@@ -456,11 +468,19 @@ $(document).ready(function() {
 				touch2.clientY - touch1.clientY
 			);
 			touchStartScale = currentZoom;
+			isTouchPanning = false;
+		} else if (e.originalEvent.touches.length === 1) {
+			// One finger - prepare for panning
+			const touch = e.originalEvent.touches[0];
+			touchStartPos = {x: touch.clientX, y: touch.clientY};
+			touchStartViewBox = {...viewBox};
+			isTouchPanning = false; // Will be set to true on move
 		}
 	});
-	
+
 	$('#svg-container').on('touchmove', function(e) {
 		if (e.originalEvent.touches.length === 2) {
+			// Two fingers - pinch zoom
 			e.preventDefault();
 			const touch1 = e.originalEvent.touches[0];
 			const touch2 = e.originalEvent.touches[1];
@@ -468,50 +488,120 @@ $(document).ready(function() {
 				touch2.clientX - touch1.clientX,
 				touch2.clientY - touch1.clientY
 			);
-			
+
 			if (touchStartDistance > 0) {
 				const scale = currentDistance / touchStartDistance;
 				const newZoom = Math.max(0.5, Math.min(5, touchStartScale * scale));
 				const factor = newZoom / currentZoom;
-				
+
 				// Calculate center point between touches
 				const centerX = (touch1.clientX + touch2.clientX) / 2;
 				const centerY = (touch1.clientY + touch2.clientY) / 2;
-				
+
 				// Get position relative to SVG
 				const svg = $('#no-map')[0];
 				const rect = svg.getBoundingClientRect();
 				const relX = (centerX - rect.left) / rect.width;
 				const relY = (centerY - rect.top) / rect.height;
-				
+
 				zoom(factor, relX, relY);
 			}
+		} else if (e.originalEvent.touches.length === 1 && touchStartViewBox) {
+			// One finger - panning
+			const touch = e.originalEvent.touches[0];
+			const dx = touch.clientX - touchStartPos.x;
+			const dy = touch.clientY - touchStartPos.y;
+			touchMoveDistance = Math.abs(dx) + Math.abs(dy);
+
+			// Only start panning if moved more than 10px, or if already panning
+			if (touchMoveDistance > 10 || isTouchPanning) {
+				isTouchPanning = true;
+
+				// Prevent pull-to-refresh only when:
+				// - Panning horizontally
+				// - OR not at page top
+				// - OR already zoomed in
+				// - OR panning upward
+				const isPanningHorizontally = Math.abs(dx) > Math.abs(dy);
+				const isPanningDown = dy > 0;
+				const atTop = isAtPageTop();
+				const shouldPrevent = isPanningHorizontally || !atTop || currentZoom > 1.05 || !isPanningDown;
+
+				if (shouldPrevent) {
+					e.preventDefault();
+				}
+
+				// Calculate pan based on viewport size and zoom
+				const scaleX = viewBox.width / $('#svg-container').width();
+				const scaleY = viewBox.height / $('#svg-container').height();
+
+				viewBox.x = Math.max(0, Math.min(
+					touchStartViewBox.x - (dx * scaleX),
+					2104.7244 - viewBox.width
+				));
+				viewBox.y = Math.max(0, Math.min(
+					touchStartViewBox.y - (dy * scaleY),
+					2979.9211 - viewBox.height
+				));
+
+				updateViewBox();
+
+				// Add visual feedback
+				$('#svg-container').addClass('panning');
+			}
+		}
+	});
+
+	$('#svg-container').on('touchend touchcancel', function(e) {
+		// Remove panning visual feedback
+		$('#svg-container').removeClass('panning');
+
+		if (e.originalEvent.touches.length === 0) {
+			isTouchPanning = false;
+			touchStartDistance = 0;
+			touchStartViewBox = null;
 		}
 	});
 	
 	// Improve touch responsiveness for paths
 	let touchTimer;
+	let pathTouchStartTime = 0;
+
 	$('path').on('touchstart', function(e) {
+		pathTouchStartTime = Date.now();
 		const element = this;
 		touchTimer = setTimeout(function() {
-			// Long press shows info
-			const info = $(element).data('info');
-			$('#info-box').html(info).css({
-				display: 'block',
-				top: e.originalEvent.touches[0].pageY - 50,
-				left: e.originalEvent.touches[0].pageX - 50
-			});
+			// Long press shows info (only if not panning)
+			if (!isTouchPanning) {
+				const info = $(element).data('info');
+				$('#info-box').html(info).css({
+					display: 'block',
+					top: e.originalEvent.touches[0].pageY - 50,
+					left: e.originalEvent.touches[0].pageX - 50
+				});
+			}
 		}, 500);
 	});
-	
+
 	$('path').on('touchend', function(e) {
 		clearTimeout(touchTimer);
 		$('#info-box').css('display', 'none');
-		// Trigger click for selection
-		$(this).trigger('click');
+
+		// Only trigger click if:
+		// 1. Touch was quick (< 300ms)
+		// 2. User didn't pan (touchMoveDistance < 10px)
+		const touchDuration = Date.now() - pathTouchStartTime;
+		const wasQuickTap = touchDuration < 300;
+		const didNotPan = touchMoveDistance < 10;
+
+		if (wasQuickTap && didNotPan && !isTouchPanning) {
+			// Trigger click for selection
+			$(this).trigger('click');
+		}
+
 		e.preventDefault();
 	});
-	
+
 	$('path').on('touchmove', function() {
 		clearTimeout(touchTimer);
 		$('#info-box').css('display', 'none');
