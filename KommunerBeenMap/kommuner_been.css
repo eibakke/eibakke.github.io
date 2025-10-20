@@ -118,6 +118,45 @@ body {
   gap: 10px;
 }
 
+.hidden {
+  display: none;
+}
+
+#royal-info {
+  background-color: #fef3c7;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  margin: 15px 0;
+  border-left: 4px solid #f59e0b;
+}
+
+#royal-btn {
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1em;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+}
+
+#royal-btn:hover {
+  background-color: #d97706;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+#royal-btn.active {
+  background-color: #059669;
+}
+
+#royal-btn.active:hover {
+  background-color: #047857;
+}
+
 #share-btn {
   background-color: var(--color-primary);
   color: white;

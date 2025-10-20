@@ -6,6 +6,23 @@ $(document).ready(function() {
 	const default_color = "#5c8bd6";
 	const hover_color = "#002868";
 	const selected_color = "#4CAF50";
+	const royal_color = "#f59e0b"; // Amber/gold for royal visits
+	const royal_unvisited_color = "#9ca3af"; // Gray for unvisited by royals
+
+	// The 9 kommuner the King and Queen have NOT yet visited
+	const royal_unvisited = new Set([
+		"Beiarn",
+		"Nissedal",
+		"Siljan",
+		"Etne",
+		"Samnanger",
+		"Vaksdal",
+		"Askvoll",
+		"Rindal",
+		"Høylandet"
+	]);
+
+	let showingRoyalProgress = false;
 	
 	// Zoom and pan variables
 	let currentZoom = 1;
@@ -104,8 +121,77 @@ $(document).ready(function() {
 	// Remove kommune function
 	function removeKommune(kommuneName) {
 		selected_kommuner.delete(kommuneName);
-		$(`#${kommuneName}`).css('fill', default_color);
+		// Restore appropriate color based on whether royal view is active
+		if (showingRoyalProgress) {
+			if (royal_unvisited.has(kommuneName)) {
+				$(`#${kommuneName}`).css('fill', royal_unvisited_color);
+			} else {
+				$(`#${kommuneName}`).css('fill', royal_color);
+			}
+		} else {
+			$(`#${kommuneName}`).css('fill', default_color);
+		}
 		saveKommuner();
+	}
+
+	// Royal progress functions
+	function toggleRoyalProgress() {
+		showingRoyalProgress = !showingRoyalProgress;
+
+		if (showingRoyalProgress) {
+			showRoyalProgress();
+		} else {
+			hideRoyalProgress();
+		}
+	}
+
+	function showRoyalProgress() {
+		const total = $("path").length;
+		const royalVisited = total - royal_unvisited.size;
+
+		// Update button appearance
+		$('#royal-btn').text('👑 Skjul Kongebesøk').addClass('active');
+		$('#royal-info').removeClass('hidden');
+		$('#royal-count').text(royalVisited);
+		$('#total-count').text(total);
+
+		// Apply royal colors to all paths
+		$("path").each(function() {
+			const kommune = $(this).attr("id");
+
+			// Don't override user's selected kommuner (they stay green)
+			if (selected_kommuner.has(kommune)) {
+				return; // Skip, keep user's selection visible
+			}
+
+			// Show royal progress
+			if (royal_unvisited.has(kommune)) {
+				// Not visited by royals - gray
+				$(this).css('fill', royal_unvisited_color);
+			} else {
+				// Visited by royals - amber/gold
+				$(this).css('fill', royal_color);
+			}
+		});
+	}
+
+	function hideRoyalProgress() {
+		// Update button appearance
+		$('#royal-btn').text('👑 Se Kongebesøk').removeClass('active');
+		$('#royal-info').addClass('hidden');
+
+		// Restore original colors
+		$("path").each(function() {
+			const kommune = $(this).attr("id");
+
+			// Keep user's selections
+			if (selected_kommuner.has(kommune)) {
+				$(this).css('fill', selected_color);
+			} else {
+				// Reset to default
+				$(this).css('fill', default_color);
+			}
+		});
 	}
 
 	// Initialize
@@ -115,7 +201,16 @@ $(document).ready(function() {
 		const kommune = $(this).attr("id");
 		if (selected_kommuner.has(kommune)) {
 			selected_kommuner.delete(kommune);
-			$(this).css('fill', default_color);
+			// If royal view is active, restore appropriate color
+			if (showingRoyalProgress) {
+				if (royal_unvisited.has(kommune)) {
+					$(this).css('fill', royal_unvisited_color);
+				} else {
+					$(this).css('fill', royal_color);
+				}
+			} else {
+				$(this).css('fill', default_color);
+			}
 		} else {
 			$(this).css('fill', selected_color);
 			selected_kommuner.add(kommune);
@@ -136,15 +231,41 @@ $(document).ready(function() {
 	  const kommune = $(this).attr("id");
 	  $('#info-box').css('display','none');
 	  if (!selected_kommuner.has(kommune)){
-	  	$(this).css('fill', default_color);	  	
+		// Restore appropriate color based on current view mode
+		if (showingRoyalProgress) {
+			if (royal_unvisited.has(kommune)) {
+				$(this).css('fill', royal_unvisited_color);
+			} else {
+				$(this).css('fill', royal_color);
+			}
+		} else {
+			$(this).css('fill', default_color);
+		}
 	  }
+	});
+
+	// Royal progress button handler
+	$('#royal-btn').click(function() {
+		toggleRoyalProgress();
 	});
 
 	// Clear all button handler
 	$('#clear-btn').click(function() {
 		if (confirm('Er du sikker på at du vil fjerne alle valgte kommuner?')) {
 			selected_kommuner.clear();
-			$("path").css('fill', default_color);
+			// Reset colors based on whether royal view is active
+			if (showingRoyalProgress) {
+				$("path").each(function() {
+					const kommune = $(this).attr("id");
+					if (royal_unvisited.has(kommune)) {
+						$(this).css('fill', royal_unvisited_color);
+					} else {
+						$(this).css('fill', royal_color);
+					}
+				});
+			} else {
+				$("path").css('fill', default_color);
+			}
 			saveKommuner();
 		}
 	});
