@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Gift For You!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 50%, #1a472a 100%);
+            font-family: 'Georgia', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .snowflakes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 1.5rem;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        h1 {
+            color: #f5e6c8;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            color: #c9a959;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .gift-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin: 0 auto 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        @media (max-width: 400px) {
+            .gift-container {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        .gift-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .gift-image img {
+            max-width: 80%;
+            max-height: 60%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .gift-image .product-name {
+            margin-top: 15px;
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .gift-image .product-tagline {
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        #scratchCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        .instructions {
+            color: #f5e6c8;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            padding: 15px 25px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .message-card {
+            background: linear-gradient(145deg, #f5e6c8, #e8d4a8);
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            max-width: 450px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .message-card.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .message-card h2 {
+            color: #8b0000;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .message-card p {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .message-card .signature {
+            margin-top: 20px;
+            font-style: italic;
+            color: #555;
+        }
+
+        .progress-container {
+            width: 200px;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            margin: 15px auto 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #c9a959, #f5e6c8);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            color: #c9a959;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+
+        .ribbon {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .ribbon.hidden {
+            opacity: 0;
+        }
+
+        .ribbon-horizontal {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(180deg, #c9a959 0%, #a88832 50%, #c9a959 100%);
+            transform: translateY(-50%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .ribbon-vertical {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(90deg, #c9a959 0%, #a88832 50%, #c9a959 100%);
+            transform: translateX(-50%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .bow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+        }
+
+        .bow-loop {
+            position: absolute;
+            width: 35px;
+            height: 50px;
+            background: linear-gradient(135deg, #c9a959 0%, #a88832 100%);
+            border-radius: 50% 50% 50% 50%;
+            box-shadow: inset -3px -3px 10px rgba(0,0,0,0.2);
+        }
+
+        .bow-loop.left {
+            left: 0;
+            top: 10px;
+            transform: rotate(-30deg);
+        }
+
+        .bow-loop.right {
+            right: 0;
+            top: 10px;
+            transform: rotate(30deg);
+        }
+
+        .bow-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #d4b366 0%, #8a6914 100%);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="snowflakes" id="snowflakes"></div>
+
+    <div class="container">
+        <h1>God Jul!</h1>
+        <p class="subtitle">En spesiell gave venter...</p>
+
+        <p class="instructions">Skrap bort innpakningspapiret for å avsløre gaven din!</p>
+
+        <div class="gift-container" id="giftContainer">
+            <div class="gift-image">
+                <img src="https://eplehuset.no/cdn/shop/files/ember_black_CM910_coaster_1x1_8ab0d323-b472-46c8-a08b-97c59218e744.jpg?v=1743587170&width=823" alt="Ember Mug 2" id="giftImg">
+                <div class="product-name">Ember Mug 2</div>
+                <div class="product-tagline">Kaffen din, alltid på perfekt temperatur</div>
+            </div>
+            <canvas id="scratchCanvas"></canvas>
+            <div class="ribbon" id="ribbon">
+                <div class="ribbon-horizontal"></div>
+                <div class="ribbon-vertical"></div>
+                <div class="bow">
+                    <div class="bow-loop left"></div>
+                    <div class="bow-loop right"></div>
+                    <div class="bow-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="progress-text" id="progressText">0% unwrapped</p>
+
+        <div class="message-card" id="messageCard">
+            <h2>God Jul, Pappa!</h2>
+            <p>Gaven din er en <strong>Ember Mug 2</strong> - en smart temperaturkontrollert kopp som holder kaffen eller teen din på den perfekte drikketemperaturen i timevis!</p>
+            <p>Gaven er på vei og kommer snart. Jeg kunne ikke vente med å gi deg en liten forsmak!</p>
+            <p class="signature">Til pappa fra Eivind. God jul!</p>
+        </div>
+    </div>
+
+    <script>
+        // Create snowflakes
+        const snowflakesContainer = document.getElementById('snowflakes');
+        const snowflakeChars = ['❄', '❅', '❆', '✻', '✼'];
+
+        for (let i = 0; i < 50; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.textContent = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+            snowflake.style.left = Math.random() * 100 + '%';
+            snowflake.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            snowflake.style.animationDelay = Math.random() * 5 + 's';
+            snowflake.style.fontSize = (Math.random() * 1 + 0.8) + 'rem';
+            snowflake.style.opacity = Math.random() * 0.6 + 0.4;
+            snowflakesContainer.appendChild(snowflake);
+        }
+
+        // Scratch canvas setup
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('giftContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const messageCard = document.getElementById('messageCard');
+        const ribbon = document.getElementById('ribbon');
+
+        let isDrawing = false;
+        let revealed = false;
+        let ribbonHidden = false;
+
+        function resizeCanvas() {
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            drawWrappingPaper();
+        }
+
+        function drawWrappingPaper() {
+            // Red wrapping paper base
+            ctx.fillStyle = '#c41e3a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw festive pattern
+            ctx.strokeStyle = '#8b0000';
+            ctx.lineWidth = 1;
+
+            // Diamond pattern
+            const spacing = 30;
+            for (let y = 0; y < canvas.height + spacing; y += spacing) {
+                for (let x = 0; x < canvas.width + spacing; x += spacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - spacing/2);
+                    ctx.lineTo(x + spacing/2, y);
+                    ctx.lineTo(x, y + spacing/2);
+                    ctx.lineTo(x - spacing/2, y);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+            }
+
+            // Add small decorative dots
+            ctx.fillStyle = '#ffd700';
+            for (let y = spacing/2; y < canvas.height; y += spacing) {
+                for (let x = spacing/2; x < canvas.width; x += spacing) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function getEventPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            if (e.touches) {
+                return {
+                    x: (e.touches[0].clientX - rect.left) * scaleX,
+                    y: (e.touches[0].clientY - rect.top) * scaleY
+                };
+            }
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function scratch(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const pos = getEventPos(e);
+
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            checkProgress();
+        }
+
+        function checkProgress() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparent = 0;
+
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] === 0) transparent++;
+            }
+
+            const percentage = Math.round((transparent / (pixels.length / 4)) * 100);
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = percentage + '% unwrapped';
+
+            // Hide ribbon after 20% scratched
+            if (percentage > 20 && !ribbonHidden) {
+                ribbonHidden = true;
+                ribbon.classList.add('hidden');
+            }
+
+            // Reveal message after 60% scratched
+            if (percentage > 60 && !revealed) {
+                revealed = true;
+                canvas.style.display = 'none';
+                messageCard.classList.add('revealed');
+                launchConfetti();
+            }
+        }
+
+        function launchConfetti() {
+            const colors = ['#c41e3a', '#ffd700', '#228b22', '#ffffff', '#c9a959'];
+
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = (Math.random() * 10 + 5) + 'px';
+                    confetti.style.height = (Math.random() * 10 + 5) + 'px';
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    confetti.style.animation = `confetti-fall ${Math.random() * 2 + 2}s linear forwards`;
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 30);
+            }
+        }
+
+        // Event listeners
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            scratch(e);
+        });
+
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseleave', () => isDrawing = false);
+
+        // Touch events
+        canvas.addEventListener('touchstart', (e) => {
+            isDrawing = true;
+            scratch(e);
+        });
+
+        canvas.addEventListener('touchmove', scratch);
+        canvas.addEventListener('touchend', () => isDrawing = false);
+
+        // Initialize
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
+</body>
+</html>
