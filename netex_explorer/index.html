@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeTEx Map Explorer</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h2>Loading NeTEx Explorer</h2>
+            <p id="loading-status">Initializing DuckDB...</p>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1>NeTEx Explorer</h1>
+                <button id="mobile-close" class="mobile-close" aria-label="Close menu">&times;</button>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- Data Source Info -->
+                <section class="panel">
+                    <h3>Data Source</h3>
+                    <div id="data-info" class="data-info">
+                        <p><strong>Import:</strong> <span id="import-date">Loading...</span></p>
+                        <p><strong>Entities:</strong> <span id="entity-count">-</span></p>
+                    </div>
+                </section>
+
+                <!-- Layer Controls -->
+                <section class="panel">
+                    <h3>Map Layers</h3>
+                    <div class="layer-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="layer-stops" checked />
+                            <span class="checkbox-custom"></span>
+                            <span>Stop Places</span>
+                            <span id="stops-count" class="count-badge">-</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="layer-quays" />
+                            <span class="checkbox-custom"></span>
+                            <span>Quays</span>
+                            <span id="quays-count" class="count-badge">-</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="layer-lines" />
+                            <span class="checkbox-custom"></span>
+                            <span>Lines</span>
+                            <span id="lines-count" class="count-badge">-</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Search -->
+                <section class="panel">
+                    <h3>Search</h3>
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Search stop places..." />
+                        <button id="search-btn" class="btn btn-primary">Search</button>
+                    </div>
+                    <div id="search-results" class="search-results"></div>
+                </section>
+
+                <!-- Entity Types Filter -->
+                <section class="panel">
+                    <h3>Entity Types</h3>
+                    <div id="entity-types" class="entity-types">
+                        <p class="loading-text">Loading types...</p>
+                    </div>
+                </section>
+
+                <!-- Selected Entity Details -->
+                <section class="panel" id="details-panel" style="display: none;">
+                    <h3>Selected Entity</h3>
+                    <div id="entity-details" class="entity-details"></div>
+                </section>
+
+                <!-- Query Console -->
+                <section class="panel collapsible">
+                    <h3 class="panel-header" data-toggle="query-console">
+                        SQL Query Console
+                        <span class="toggle-icon">+</span>
+                    </h3>
+                    <div id="query-console" class="panel-body collapsed">
+                        <textarea id="sql-input" placeholder="SELECT * FROM entities LIMIT 10"></textarea>
+                        <div class="query-actions">
+                            <button id="run-query" class="btn btn-primary">Run Query</button>
+                            <button id="clear-query" class="btn btn-secondary">Clear</button>
+                        </div>
+                        <div id="query-results" class="query-results"></div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="sidebar-footer">
+                <a href="/" class="back-link">&larr; Back to Portfolio</a>
+            </div>
+        </aside>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <!-- Map Container -->
+        <main class="map-container">
+            <div id="map"></div>
+
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button id="zoom-to-norway" class="map-control-btn" title="Zoom to Norway">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Info Box -->
+            <div id="hover-info" class="hover-info" style="display: none;"></div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
