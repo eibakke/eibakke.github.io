@@ -97,31 +97,44 @@ async function init() {
 
 // Discover the latest import timestamp
 async function discoverLatestImport() {
-    // Use a known recent timestamp based on the bucket listing
-    // In production, you might want to list the bucket or use a metadata endpoint
-    const knownTimestamps = [
-        '2026-01-27T06%3A51%3A53.234399',
-        '2026-01-27T05%3A00%3A24.456629',
-        '2026-01-26T06%3A44%3A00.925295'
-    ];
+    try {
+        // Use GCS JSON API to list import timestamps
+        const listUrl = 'https://storage.googleapis.com/storage/v1/b/netex-parquet-dev/o?prefix=aggregated/import_ts=&delimiter=/&maxResults=100';
+        const response = await fetch(listUrl);
 
-    for (const ts of knownTimestamps) {
-        try {
-            // Test if this timestamp has data
-            const testUrl = `${GCS_BASE}/import_ts=${ts}/entity_types.parquet`;
-            const response = await fetch(testUrl, { method: 'HEAD' });
-            if (response.ok) {
-                document.getElementById('import-date').textContent = decodeURIComponent(ts).replace('T', ' ').slice(0, 19);
-                return ts;
+        if (response.ok) {
+            const data = await response.json();
+            if (data.prefixes && data.prefixes.length > 0) {
+                // Prefixes are like "aggregated/import_ts=1769634342720933/"
+                // Extract timestamps and find the latest (highest number)
+                const timestamps = data.prefixes
+                    .map(p => {
+                        const match = p.match(/import_ts=(\d+)/);
+                        return match ? match[1] : null;
+                    })
+                    .filter(Boolean)
+                    .sort((a, b) => BigInt(b) - BigInt(a)); // Sort descending
+
+                if (timestamps.length > 0) {
+                    const latestTs = timestamps[0];
+                    // Convert microseconds to date for display
+                    const dateMs = Number(BigInt(latestTs) / 1000n);
+                    const date = new Date(dateMs);
+                    document.getElementById('import-date').textContent = date.toISOString().replace('T', ' ').slice(0, 19);
+                    console.log(`Found ${timestamps.length} imports, using latest: ${latestTs}`);
+                    return latestTs;
+                }
             }
-        } catch (e) {
-            continue;
         }
+    } catch (e) {
+        console.error('Error discovering imports:', e);
     }
 
-    // Fallback to most recent known
-    const fallback = knownTimestamps[0];
-    document.getElementById('import-date').textContent = decodeURIComponent(fallback).replace('T', ' ').slice(0, 19);
+    // Fallback to a known recent timestamp
+    const fallback = '1769634342720933';
+    const dateMs = Number(BigInt(fallback) / 1000n);
+    const date = new Date(dateMs);
+    document.getElementById('import-date').textContent = date.toISOString().replace('T', ' ').slice(0, 19);
     return fallback;
 }
 
