@@ -44,6 +44,42 @@
                     </div>
                 </section>
 
+                <!-- Data Loading Stats -->
+                <section class="panel collapsible">
+                    <h3 class="panel-header" data-toggle="loading-stats">
+                        Loading Stats
+                        <span class="toggle-icon">+</span>
+                    </h3>
+                    <div id="loading-stats" class="panel-body collapsed">
+                        <div class="stats-summary">
+                            <div class="stat-item">
+                                <span class="stat-value" id="total-queries">0</span>
+                                <span class="stat-label">Queries</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="total-rows">0</span>
+                                <span class="stat-label">Rows</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="total-time">0s</span>
+                                <span class="stat-label">Time</span>
+                            </div>
+                        </div>
+                        <div class="files-loaded">
+                            <h4>Files Accessed</h4>
+                            <div id="files-list" class="files-list">
+                                <p class="loading-text">No files loaded yet</p>
+                            </div>
+                        </div>
+                        <div class="query-log">
+                            <h4>Recent Queries</h4>
+                            <div id="query-log" class="query-log-list">
+                                <p class="loading-text">No queries yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Layer Controls -->
                 <section class="panel">
                     <h3>Map Layers</h3>
