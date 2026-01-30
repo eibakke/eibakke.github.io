@@ -720,21 +720,48 @@ async function runQuery(sql) {
     }
 }
 
-// Setup UI event handlers
-function setupUI() {
-    // Mobile menu
+// Setup mobile menu immediately (before data loads)
+function setupMobileMenu() {
     const sidebar = document.getElementById('sidebar');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const mobileClose = document.getElementById('mobile-close');
 
-    mobileMenuBtn.addEventListener('click', () => {
-        sidebar.classList.add('open');
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+        });
+    }
+
+    if (mobileClose) {
+        mobileClose.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('open') &&
+            !sidebar.contains(e.target) &&
+            !mobileMenuBtn.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
     });
 
-    mobileClose.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-    });
+    // Collapsible panels - also set up immediately
+    document.querySelectorAll('.panel-header[data-toggle]').forEach(header => {
+        header.addEventListener('click', () => {
+            const targetId = header.dataset.toggle;
+            const body = document.getElementById(targetId);
+            const icon = header.querySelector('.toggle-icon');
 
+            body.classList.toggle('collapsed');
+            icon.textContent = body.classList.contains('collapsed') ? '+' : '-';
+        });
+    });
+}
+
+// Setup UI event handlers (called after data loads)
+function setupUI() {
     // Layer toggles
     document.getElementById('layer-stops').addEventListener('change', (e) => {
         if (e.target.checked) {
@@ -783,18 +810,6 @@ function setupUI() {
         }
     });
 
-    // Collapsible panels
-    document.querySelectorAll('.panel-header[data-toggle]').forEach(header => {
-        header.addEventListener('click', () => {
-            const targetId = header.dataset.toggle;
-            const body = document.getElementById(targetId);
-            const icon = header.querySelector('.toggle-icon');
-
-            body.classList.toggle('collapsed');
-            icon.textContent = body.classList.contains('collapsed') ? '+' : '-';
-        });
-    });
-
     // Query console
     document.getElementById('run-query').addEventListener('click', () => {
         const sql = document.getElementById('sql-input').value;
@@ -813,5 +828,8 @@ function setupUI() {
         "SELECT entity_type, COUNT(*) as count\nFROM entities\nGROUP BY entity_type\nORDER BY count DESC\nLIMIT 10";
 }
 
-// Initialize on load
+// Initialize mobile menu immediately (works even if data loading fails)
+setupMobileMenu();
+
+// Initialize data loading
 init();
