@@ -711,3 +711,128 @@ body {
 .query-results::-webkit-scrollbar-thumb:hover {
     background: var(--color-text-muted);
 }
+
+/* Loading Stats Panel */
+.stats-summary {
+    display: flex;
+    justify-content: space-around;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 0.75rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.files-loaded h4,
+.query-log h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.files-list {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+    background: var(--color-background);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.file-name {
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.file-stats {
+    display: flex;
+    gap: 0.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+}
+
+.file-size {
+    color: var(--color-secondary);
+}
+
+.file-rows {
+    color: var(--color-primary);
+}
+
+.query-log {
+    margin-top: 0.75rem;
+}
+
+.query-log-list {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.query-log-item {
+    padding: 0.5rem;
+    background: var(--color-background);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.375rem;
+    font-size: 0.7rem;
+}
+
+.query-log-item .query-text {
+    font-family: 'Monaco', 'Menlo', monospace;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.query-log-item .query-meta {
+    display: flex;
+    gap: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.query-meta .rows {
+    color: var(--color-primary);
+}
+
+.query-meta .time {
+    color: var(--color-secondary);
+}
+
+.query-meta .status-ok {
+    color: var(--color-secondary);
+}
+
+.query-meta .status-error {
+    color: var(--color-danger);
+}

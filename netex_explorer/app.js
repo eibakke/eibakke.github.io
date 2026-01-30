@@ -15,10 +15,148 @@ let quaysLayer = null;
 let linesLayer = null;
 let currentImportTs = null;
 
+// Query statistics tracking
+const queryStats = {
+    totalQueries: 0,
+    totalRows: 0,
+    totalTimeMs: 0,
+    filesAccessed: new Map(), // filename -> { rows, queries, lastAccess }
+    recentQueries: [] // { sql, rows, timeMs, status, timestamp }
+};
+
 // DOM Elements
 const loadingOverlay = document.getElementById('loading-overlay');
 const loadingStatus = document.getElementById('loading-status');
 const progressFill = document.getElementById('progress-fill');
+
+// Extract file names from SQL query
+function extractFilesFromSql(sql) {
+    const matches = sql.matchAll(/read_parquet\('([^']+)'\)/g);
+    const files = [];
+    for (const match of matches) {
+        const url = match[1];
+        const fileName = url.split('/').pop().replace('.parquet', '');
+        files.push(fileName);
+    }
+    return [...new Set(files)]; // unique files
+}
+
+// Track a query execution
+function trackQuery(sql, rowCount, timeMs, success = true) {
+    const files = extractFilesFromSql(sql);
+
+    // Update totals
+    queryStats.totalQueries++;
+    queryStats.totalRows += rowCount;
+    queryStats.totalTimeMs += timeMs;
+
+    // Update file stats
+    files.forEach(file => {
+        if (!queryStats.filesAccessed.has(file)) {
+            queryStats.filesAccessed.set(file, { rows: 0, queries: 0, lastAccess: null });
+        }
+        const fileStats = queryStats.filesAccessed.get(file);
+        fileStats.queries++;
+        fileStats.rows += rowCount;
+        fileStats.lastAccess = new Date();
+    });
+
+    // Add to recent queries (keep last 10)
+    const shortSql = sql.replace(/read_parquet\('[^']+'\)/g, (match) => {
+        const fileName = match.match(/\/([^/]+)\.parquet/)?.[1] || 'file';
+        return fileName;
+    }).trim();
+
+    queryStats.recentQueries.unshift({
+        sql: shortSql.substring(0, 100),
+        rows: rowCount,
+        timeMs,
+        status: success ? 'ok' : 'error',
+        timestamp: new Date()
+    });
+
+    if (queryStats.recentQueries.length > 10) {
+        queryStats.recentQueries.pop();
+    }
+
+    // Update UI
+    updateStatsUI();
+}
+
+// Update the stats UI
+function updateStatsUI() {
+    // Update summary stats
+    document.getElementById('total-queries').textContent = queryStats.totalQueries.toLocaleString();
+    document.getElementById('total-rows').textContent = formatNumber(queryStats.totalRows);
+    document.getElementById('total-time').textContent = formatTime(queryStats.totalTimeMs);
+
+    // Update files list
+    const filesList = document.getElementById('files-list');
+    if (queryStats.filesAccessed.size === 0) {
+        filesList.innerHTML = '<p class="loading-text">No files loaded yet</p>';
+    } else {
+        const filesHtml = Array.from(queryStats.filesAccessed.entries())
+            .sort((a, b) => b[1].queries - a[1].queries)
+            .map(([name, stats]) => `
+                <div class="file-item">
+                    <span class="file-name" title="${name}.parquet">${name}</span>
+                    <span class="file-stats">
+                        <span class="file-rows">${formatNumber(stats.rows)} rows</span>
+                        <span>${stats.queries}x</span>
+                    </span>
+                </div>
+            `).join('');
+        filesList.innerHTML = filesHtml;
+    }
+
+    // Update query log
+    const queryLog = document.getElementById('query-log');
+    if (queryStats.recentQueries.length === 0) {
+        queryLog.innerHTML = '<p class="loading-text">No queries yet</p>';
+    } else {
+        const queriesHtml = queryStats.recentQueries.map(q => `
+            <div class="query-log-item">
+                <span class="query-text" title="${q.sql}">${q.sql}</span>
+                <span class="query-meta">
+                    <span class="rows">${formatNumber(q.rows)} rows</span>
+                    <span class="time">${q.timeMs.toFixed(0)}ms</span>
+                    <span class="status-${q.status}">${q.status === 'ok' ? '✓' : '✗'}</span>
+                </span>
+            </div>
+        `).join('');
+        queryLog.innerHTML = queriesHtml;
+    }
+}
+
+// Format large numbers
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toLocaleString();
+}
+
+// Format time in ms to readable format
+function formatTime(ms) {
+    if (ms >= 60000) return (ms / 60000).toFixed(1) + 'm';
+    if (ms >= 1000) return (ms / 1000).toFixed(1) + 's';
+    return ms.toFixed(0) + 'ms';
+}
+
+// Tracked query wrapper
+async function trackedQuery(sql) {
+    const startTime = performance.now();
+    try {
+        const result = await conn.query(sql);
+        const rows = result.toArray();
+        const timeMs = performance.now() - startTime;
+        trackQuery(sql, rows.length, timeMs, true);
+        return { result, rows, timeMs };
+    } catch (error) {
+        const timeMs = performance.now() - startTime;
+        trackQuery(sql, 0, timeMs, false);
+        throw error;
+    }
+}
 
 // Update loading progress
 function updateProgress(percent, status) {
@@ -198,15 +336,13 @@ function initMap() {
 // Load entity types
 async function loadEntityTypes() {
     try {
-        const result = await conn.query(`
+        const { rows } = await trackedQuery(`
             SELECT entity_type, COUNT(*) as count
             FROM read_parquet('${getParquetUrl('entities')}')
             GROUP BY entity_type
             ORDER BY count DESC
             LIMIT 30
         `);
-
-        const rows = result.toArray();
         const container = document.getElementById('entity-types');
         container.innerHTML = '';
 
@@ -243,7 +379,7 @@ async function loadStopPlaces() {
 
         // Query to get stop places with their coordinates
         // NeTEx stores coordinates in entity_values or as attributes
-        const result = await conn.query(`
+        const { rows } = await trackedQuery(`
             WITH stop_entities AS (
                 SELECT
                     e.entity_id,
@@ -292,8 +428,6 @@ async function loadStopPlaces() {
               AND el.latitude BETWEEN 57 AND 72
               AND elo.longitude BETWEEN 4 AND 32
         `);
-
-        const rows = result.toArray();
 
         updateProgress(80, `Processing ${rows.length} locations...`);
 
@@ -357,7 +491,7 @@ async function loadStopPlaces() {
 // Load lines
 async function loadLines() {
     try {
-        const result = await conn.query(`
+        const { rows } = await trackedQuery(`
             SELECT
                 e.entity_id,
                 e.entity_type,
@@ -367,7 +501,6 @@ async function loadLines() {
             LIMIT 1000
         `);
 
-        const rows = result.toArray();
         document.getElementById('lines-count').textContent = rows.length.toLocaleString();
 
         // Lines don't have direct geometry - they're defined through ServiceJourneyPatterns
@@ -409,14 +542,12 @@ async function showEntityDetails(entityId, name, type, lat, lon) {
 
     // Load additional details
     try {
-        const valuesResult = await conn.query(`
+        const { rows: values } = await trackedQuery(`
             SELECT attribute, value
             FROM read_parquet('${getParquetUrl('entity_values')}')
             WHERE entity_id = '${entityId}'
             LIMIT 20
         `);
-
-        const values = valuesResult.toArray();
         const loadingEl = document.getElementById('loading-more-details');
 
         if (values.length > 0) {
@@ -459,7 +590,7 @@ async function searchStopPlaces(query) {
     resultsContainer.innerHTML = '<p class="loading-text">Searching...</p>';
 
     try {
-        const result = await conn.query(`
+        const { rows } = await trackedQuery(`
             WITH stop_entities AS (
                 SELECT entity_id, entity_type
                 FROM read_parquet('${getParquetUrl('entities')}')
@@ -494,8 +625,6 @@ async function searchStopPlaces(query) {
             WHERE el.latitude IS NOT NULL AND elo.longitude IS NOT NULL
             LIMIT 20
         `);
-
-        const rows = result.toArray();
 
         if (rows.length === 0) {
             resultsContainer.innerHTML = '<p class="loading-text">No results found</p>';
@@ -556,8 +685,7 @@ async function runQuery(sql) {
             .replace(/FROM\s+codespaces/gi, `FROM read_parquet('${getParquetUrl('codespaces')}')`)
             .replace(/FROM\s+files/gi, `FROM read_parquet('${getParquetUrl('files')}')`);
 
-        const result = await conn.query(processedSql);
-        const rows = result.toArray();
+        const { rows } = await trackedQuery(processedSql);
 
         if (rows.length === 0) {
             resultsContainer.innerHTML = '<p class="loading-text">No results</p>';
@@ -592,21 +720,48 @@ async function runQuery(sql) {
     }
 }
 
-// Setup UI event handlers
-function setupUI() {
-    // Mobile menu
+// Setup mobile menu immediately (before data loads)
+function setupMobileMenu() {
     const sidebar = document.getElementById('sidebar');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const mobileClose = document.getElementById('mobile-close');
 
-    mobileMenuBtn.addEventListener('click', () => {
-        sidebar.classList.add('open');
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+        });
+    }
+
+    if (mobileClose) {
+        mobileClose.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('open') &&
+            !sidebar.contains(e.target) &&
+            !mobileMenuBtn.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
     });
 
-    mobileClose.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-    });
+    // Collapsible panels - also set up immediately
+    document.querySelectorAll('.panel-header[data-toggle]').forEach(header => {
+        header.addEventListener('click', () => {
+            const targetId = header.dataset.toggle;
+            const body = document.getElementById(targetId);
+            const icon = header.querySelector('.toggle-icon');
 
+            body.classList.toggle('collapsed');
+            icon.textContent = body.classList.contains('collapsed') ? '+' : '-';
+        });
+    });
+}
+
+// Setup UI event handlers (called after data loads)
+function setupUI() {
     // Layer toggles
     document.getElementById('layer-stops').addEventListener('change', (e) => {
         if (e.target.checked) {
@@ -655,18 +810,6 @@ function setupUI() {
         }
     });
 
-    // Collapsible panels
-    document.querySelectorAll('.panel-header[data-toggle]').forEach(header => {
-        header.addEventListener('click', () => {
-            const targetId = header.dataset.toggle;
-            const body = document.getElementById(targetId);
-            const icon = header.querySelector('.toggle-icon');
-
-            body.classList.toggle('collapsed');
-            icon.textContent = body.classList.contains('collapsed') ? '+' : '-';
-        });
-    });
-
     // Query console
     document.getElementById('run-query').addEventListener('click', () => {
         const sql = document.getElementById('sql-input').value;
@@ -685,5 +828,8 @@ function setupUI() {
         "SELECT entity_type, COUNT(*) as count\nFROM entities\nGROUP BY entity_type\nORDER BY count DESC\nLIMIT 10";
 }
 
-// Initialize on load
+// Initialize mobile menu immediately (works even if data loading fails)
+setupMobileMenu();
+
+// Initialize data loading
 init();
